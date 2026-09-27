@@ -1,0 +1,30 @@
+@baseUrl = http://localhost:8080
+@correlationId = frontend-contract-example
+
+### Register
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+X-Correlation-Id: {{correlationId}}
+
+{"email":"owner@example.test","firstName":"Ada","lastName":"Owner","password":"replace-at-runtime"}
+
+### Login — copy tokens only into local runtime variables
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+X-Correlation-Id: {{correlationId}}
+
+{"email":"owner@example.test","password":"replace-at-runtime"}
+
+### Public offers
+GET {{baseUrl}}/api/public/sites/00000000-0000-0000-0000-000000000000/offers?page=0&size=20
+X-Correlation-Id: {{correlationId}}
+
+### Owner sites
+GET {{baseUrl}}/api/organizations/00000000-0000-0000-0000-000000000000/sites?page=0&size=20
+Authorization: Bearer {{accessToken}}
+X-Correlation-Id: {{correlationId}}
+
+### Payment status; checkout proof is not a JWT
+GET {{baseUrl}}/api/payments/00000000-0000-0000-0000-000000000000
+X-Checkout-Token: {{checkoutToken}}
+X-Correlation-Id: {{correlationId}}

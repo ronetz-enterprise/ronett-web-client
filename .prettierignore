@@ -1,0 +1,11 @@
+node_modules
+build
+.react-router
+package-lock.json
+frontend-contract
+.agents
+.codex
+public/mockServiceWorker.js
+playwright-report
+test-results
+coverage
