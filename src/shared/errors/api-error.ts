@@ -1,11 +1,12 @@
 import { z } from "zod";
-const problemSchema = z.object({
+const problemSchema = z.looseObject({
   type: z.string().optional(),
   title: z.string(),
   status: z.number().int().min(400).max(599),
   detail: z.string().optional(),
   instance: z.string().optional(),
   errorCode: z.string().optional(),
+  code: z.string().optional(),
   correlationId: z.string().optional(),
   errors: z
     .array(z.object({ field: z.string(), message: z.string() }))

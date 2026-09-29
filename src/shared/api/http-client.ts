@@ -4,9 +4,9 @@ import {
   extractCorrelationId,
   parseProblemDetail,
 } from "@/shared/errors/api-error";
-type RequestOptions = Omit<
+export type RequestOptions = Omit<
   RequestInit,
-  "body" | "credentials" | "signal" | "redirect"
+  "body" | "signal" | "redirect"
 > & {
   body?: unknown;
   signal?: AbortSignal;
@@ -42,7 +42,7 @@ export function createHttpClient(baseUrl: string) {
         ...init,
         headers,
         body: body === undefined ? undefined : JSON.stringify(body),
-        credentials: "omit",
+        credentials: options.credentials ?? "omit",
         redirect: "error",
         cache: "no-store",
         signal: controller.signal,

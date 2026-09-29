@@ -4,7 +4,7 @@ export default function HomePage() {
   return (
     <>
       <PageHeader
-        title="Bienvenue sur Ronet"
+        title="Bienvenue sur Ronetz"
         description="Le socle de votre espace de gestion Wi-Fi."
       />
       <nav aria-label="Accueil" className="flex flex-col gap-4">

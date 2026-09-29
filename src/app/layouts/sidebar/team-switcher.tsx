@@ -1,31 +1,50 @@
-import {
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/shared/ui/sidebar";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { LayoutBottomIcon } from "@hugeicons/core-free-icons";
-export function TeamSwitcher({ organizationId }: { organizationId?: string }) {
+import { Link, useNavigate } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { useMemberships, isAccessible } from "@/features/memberships";
+import { useActiveOrganization } from "@/features/organizations";
+import { clearOrganizationCache } from "@/shared/api/query-client";
+import { organizationRoutes } from "@/shared/auth/organization-routes";
+import { SidebarMenu, SidebarMenuItem } from "@/shared/ui/sidebar";
+export function TeamSwitcher() {
+  const active = useActiveOrganization();
+  const memberships = useMemberships();
+  const navigate = useNavigate();
+  const client = useQueryClient();
   return (
     <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          size="lg"
-          disabled
-          aria-label="Sélecteur d’organisation indisponible"
+      <SidebarMenuItem className="p-2 group-data-[collapsible=icon]:hidden">
+        <label htmlFor="organization-switcher" className="text-xs">
+          Organisation active
+        </label>
+        <select
+          id="organization-switcher"
+          className="mt-1 w-full min-w-0 rounded-md border bg-sidebar p-2 text-sm"
+          value={active.organizationId}
+          disabled={memberships.isFetching || memberships.isError}
+          onChange={(event) => {
+            const target = memberships.data?.find(
+              (m) => m.organizationId === event.target.value && isAccessible(m),
+            );
+            if (!target || target.organizationId === active.organizationId)
+              return;
+            clearOrganizationCache(client, active.organizationId);
+            void navigate(organizationRoutes.dashboard(target.organizationId));
+          }}
         >
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <HugeiconsIcon icon={LayoutBottomIcon} />
-          </div>
-          <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-medium">
-              {organizationId ? "Organisation" : "Ronet · Plateforme"}
-            </span>
-            <span className="truncate text-xs">
-              {organizationId ?? "Contexte plateforme"}
-            </span>
-          </div>
-        </SidebarMenuButton>
+          {(memberships.data ?? [active]).filter(isAccessible).map((m) => (
+            <option key={m.organizationId} value={m.organizationId}>
+              {m.organizationName}
+            </option>
+          ))}
+        </select>
+        <Link
+          className="mt-2 block text-xs underline"
+          to={organizationRoutes.create}
+        >
+          Créer une organisation
+        </Link>
+        <p className="mt-1 text-xs">{active.role}</p>
+        {memberships.isError && <p role="alert">Liste indisponible.</p>}
       </SidebarMenuItem>
     </SidebarMenu>
   );

@@ -1,0 +1,134 @@
+[
+  {
+    "theme": "light",
+    "foreground": "primary-foreground",
+    "background": "primary",
+    "contrast": 5.09
+  },
+  {
+    "theme": "light",
+    "foreground": "success-foreground",
+    "background": "success",
+    "contrast": 9.15
+  },
+  {
+    "theme": "light",
+    "foreground": "warning-foreground",
+    "background": "warning",
+    "contrast": 8.37
+  },
+  {
+    "theme": "light",
+    "foreground": "info-foreground",
+    "background": "info",
+    "contrast": 7.95
+  },
+  {
+    "theme": "light",
+    "foreground": "danger-foreground",
+    "background": "danger",
+    "contrast": 8.04
+  },
+  {
+    "theme": "light",
+    "foreground": "muted-foreground",
+    "background": "background",
+    "contrast": 5.28
+  },
+  {
+    "theme": "light",
+    "foreground": "focus",
+    "background": "background",
+    "contrast": 7.44
+  },
+  {
+    "theme": "light",
+    "foreground": "focus",
+    "background": "card",
+    "contrast": 7.44
+  },
+  {
+    "theme": "light",
+    "foreground": "control-border",
+    "background": "background",
+    "contrast": 4.65
+  },
+  {
+    "theme": "light",
+    "foreground": "control-border",
+    "background": "card",
+    "contrast": 4.65
+  },
+  {
+    "theme": "light",
+    "foreground": "primary",
+    "background": "background",
+    "contrast": 5.37
+  },
+  {
+    "theme": "dark",
+    "foreground": "primary-foreground",
+    "background": "primary",
+    "contrast": 7.19
+  },
+  {
+    "theme": "dark",
+    "foreground": "success-foreground",
+    "background": "success",
+    "contrast": 9.4
+  },
+  {
+    "theme": "dark",
+    "foreground": "warning-foreground",
+    "background": "warning",
+    "contrast": 9.21
+  },
+  {
+    "theme": "dark",
+    "foreground": "info-foreground",
+    "background": "info",
+    "contrast": 8.96
+  },
+  {
+    "theme": "dark",
+    "foreground": "danger-foreground",
+    "background": "danger",
+    "contrast": 9.1
+  },
+  {
+    "theme": "dark",
+    "foreground": "muted-foreground",
+    "background": "background",
+    "contrast": 7.63
+  },
+  {
+    "theme": "dark",
+    "foreground": "focus",
+    "background": "background",
+    "contrast": 11.34
+  },
+  {
+    "theme": "dark",
+    "foreground": "focus",
+    "background": "card",
+    "contrast": 10.26
+  },
+  {
+    "theme": "dark",
+    "foreground": "control-border",
+    "background": "background",
+    "contrast": 5.88
+  },
+  {
+    "theme": "dark",
+    "foreground": "control-border",
+    "background": "card",
+    "contrast": 5.33
+  },
+  {
+    "theme": "dark",
+    "foreground": "primary",
+    "background": "background",
+    "contrast": 2.61
+  }
+]

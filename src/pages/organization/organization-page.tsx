@@ -1,18 +1,32 @@
-import { PageHeader, EmptyState } from "@/shared/components/feedback";
-import { useOrganizationContext } from "@/shared/auth/organization-context";
+import { SummaryCard } from "@/shared/components/page-patterns";
+import { businessStatusTone } from "@/shared/components/status";
+import { PageHeader, StatusBadge } from "@/shared/components/feedback";
+import { useActiveOrganization } from "@/features/organizations";
 export default function OrganizationPage() {
-  const { organizationId } = useOrganizationContext();
+  const organization = useActiveOrganization();
   return (
     <>
       <PageHeader
         title="Organisation"
-        description="Le contexte est défini par l’adresse de cet espace."
+        description={organization.organizationName}
       />
-      <p className="break-all text-sm">Identifiant : {organizationId}</p>
-      <EmptyState
-        title="Informations en préparation"
-        description="Le sélecteur sera activé lorsque le contrat des organisations accessibles sera disponible."
-      />
+      <SummaryCard title="Contexte de l’organisation" className="max-w-4xl">
+        <div className="space-y-4">
+          <p className="break-all text-sm">
+            Identifiant : {organization.organizationId}
+          </p>
+          <p>Rôle : {organization.role}</p>
+          <StatusBadge
+            label={organization.organizationStatus}
+            tone={
+              businessStatusTone[organization.organizationStatus] ?? "neutral"
+            }
+          />
+          <p>
+            Les paramètres détaillés seront disponibles dans un prochain sprint.
+          </p>
+        </div>
+      </SummaryCard>
     </>
   );
 }

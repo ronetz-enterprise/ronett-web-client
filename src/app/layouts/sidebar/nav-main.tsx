@@ -26,12 +26,16 @@ export function NavMain({
             <SidebarMenuItem key={item.title}>
               {item.url ? (
                 <SidebarMenuButton
-                  isActive={pathname === item.url}
+                  isActive={
+                    pathname === item.url ||
+                    (!!item.matchChildren &&
+                      pathname.startsWith(item.url + "/"))
+                  }
                   tooltip={item.title}
                   render={
                     <NavLink
                       to={item.url}
-                      end
+                      end={!item.matchChildren}
                       onClick={() => setOpenMobile(false)}
                     />
                   }

@@ -15,7 +15,7 @@ import UnexpectedErrorPage from "@/pages/public/unexpected-error-page";
 import "./styles/app.css";
 export function meta() {
   return [
-    { title: "Ronet" },
+    { title: "Ronetz" },
     { name: "description", content: "Votre espace de gestion Wi-Fi." },
   ];
 }

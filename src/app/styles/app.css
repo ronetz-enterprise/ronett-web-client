@@ -39,6 +39,18 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --success: oklch(0.95 0.025 165);
+  --success-foreground: oklch(0.36 0.07 165);
+  --warning: oklch(0.96 0.035 85);
+  --warning-foreground: oklch(0.4 0.08 65);
+  --info: oklch(0.95 0.02 250);
+  --info-foreground: oklch(0.4 0.08 250);
+  --danger: oklch(0.96 0.02 25);
+  --danger-foreground: oklch(0.42 0.14 25);
+  --control-border: oklch(0.56 0 0);
+  --focus: oklch(0.45 0 0);
+  --table-row-standard: 3.25rem;
+  --table-row-compact: 2.75rem;
 }
 
 .dark {
@@ -73,9 +85,29 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --success: oklch(0.27 0.025 165);
+  --success-foreground: oklch(0.84 0.07 165);
+  --warning: oklch(0.29 0.03 85);
+  --warning-foreground: oklch(0.86 0.08 85);
+  --info: oklch(0.28 0.025 250);
+  --info-foreground: oklch(0.84 0.065 250);
+  --danger: oklch(0.27 0.035 25);
+  --danger-foreground: oklch(0.84 0.07 25);
+  --control-border: oklch(0.64 0 0);
+  --focus: oklch(0.82 0 0);
 }
 
 @theme inline {
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-control-border: var(--control-border);
+
   --font-sans: "Inter Variable", sans-serif;
   --font-heading: "Manrope Variable", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
@@ -123,7 +155,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-sm text-foreground;
   }
   html {
     @apply font-sans;
@@ -131,7 +163,7 @@
 }
 @layer base {
   :focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--focus);
     outline-offset: 3px;
   }
   h1,
@@ -147,5 +179,44 @@
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Product boundaries preserve the original theme input and ring tokens. */
+@layer components {
+  .console-table [data-slot="table-cell"] {
+    height: var(--table-row-standard);
+  }
+  .console-table[data-density="compact"] [data-slot="table-cell"] {
+    height: var(--table-row-compact);
+  }
+}
+
+/* Visible focus survives the primitives' outline-none utility. */
+[data-slot]:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+[data-slot="input"],
+[data-slot="select-trigger"] {
+  min-height: 2.5rem;
+  font-size: 0.875rem;
+}
+[data-slot="input"]:not([aria-invalid="true"]),
+[data-slot="select-trigger"]:not([data-context]):not([aria-invalid="true"]) {
+  border-color: var(--control-border);
+}
+
+@media (pointer: coarse) {
+  [data-slot="button"],
+  [data-slot="sidebar-menu-button"],
+  [data-slot="select-trigger"],
+  [data-slot="input"] {
+    min-height: 2.75rem;
+  }
+  [data-slot="button"] {
+    min-width: 2.75rem;
   }
 }

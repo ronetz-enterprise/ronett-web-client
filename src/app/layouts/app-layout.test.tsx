@@ -1,3 +1,7 @@
+import { useEffect } from "react";
+import { useAuth } from "@/features/authentication";
+import OrganizationRoute from "@/app/router/guards/organization-route";
+import { AuthProvider } from "@/features/authentication";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
@@ -9,16 +13,31 @@ import OrganizationPage from "@/pages/organization/organization-page";
 import { createQueryClient, tenantKeys } from "@/shared/api/query-client";
 const first = "00000000-0000-4000-8000-000000000001";
 const second = "00000000-0000-4000-8000-000000000002";
+function Login({ children }: { children: React.ReactNode }) {
+  const { login, status } = useAuth();
+  useEffect(() => {
+    void login({
+      email: "multi@example.test",
+      password: "Fixture-pass-123",
+    });
+  }, [login]);
+  return status === "authenticated" ? children : null;
+}
 function setup(path = `/app/${first}`) {
   const client = createQueryClient();
   const router = createMemoryRouter(
     [
       {
         path: "/app/:organizationId",
-        Component: AppLayout,
+        Component: OrganizationRoute,
         children: [
-          { index: true, element: <h1>Contenu Outlet</h1> },
-          { path: "organization", Component: OrganizationPage },
+          {
+            Component: AppLayout,
+            children: [
+              { index: true, element: <h1>Contenu Outlet</h1> },
+              { path: "organization", Component: OrganizationPage },
+            ],
+          },
         ],
       },
       { path: "*", Component: NotFoundPage },
@@ -27,7 +46,11 @@ function setup(path = `/app/${first}`) {
   );
   const rendered = render(
     <QueryClientProvider client={client}>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <Login>
+          <RouterProvider router={router} />
+        </Login>
+      </AuthProvider>
     </QueryClientProvider>,
   );
   return { ...rendered, router, client };
@@ -35,7 +58,9 @@ function setup(path = `/app/${first}`) {
 it("renders the existing sidebar, its Outlet, active route and collapse states", async () => {
   const user = userEvent.setup();
   const { container } = setup();
-  expect(screen.getByRole("heading", { name: "Contenu Outlet" })).toBeVisible();
+  expect(
+    await screen.findByRole("heading", { name: "Contenu Outlet" }),
+  ).toBeVisible();
   expect(
     screen.getByRole("navigation", { name: "Espace organisation" }),
   ).toBeVisible();
@@ -72,6 +97,7 @@ it("opens and closes the mobile panel", async () => {
   });
   const user = userEvent.setup();
   setup();
+  await screen.findByRole("heading", { name: "Contenu Outlet" });
   await user.click(
     screen.getByRole("button", { name: "Basculer la navigation" }),
   );
@@ -89,23 +115,24 @@ it("opens and closes the mobile panel", async () => {
 });
 it("changes context and discards old tenant data", async () => {
   const { client, router } = setup(`/app/${first}/organization`);
+  await screen.findByText("Identifiant : " + first);
   client.setQueryData(tenantKeys.resource(first, "sites"), ["first-tenant"]);
   await act(() => router.navigate(`/app/${second}/organization`));
-  expect(screen.getByText(`Identifiant : ${second}`)).toBeVisible();
+  expect(await screen.findByText(`Identifiant : ${second}`)).toBeVisible();
   expect(
     client.getQueryData(tenantKeys.resource(first, "sites")),
   ).toBeUndefined();
   expect(screen.queryByText(`Identifiant : ${first}`)).not.toBeInTheDocument();
 });
-it("renders route 404", () => {
+it("renders route 404", async () => {
   setup("/unknown");
   expect(
-    screen.getByRole("heading", { name: "Page introuvable" }),
+    await screen.findByRole("heading", { name: "Page introuvable" }),
   ).toBeVisible();
 });
-it("rejects malformed tenant identifiers", () => {
+it("rejects malformed tenant identifiers", async () => {
   setup("/app/not-an-id");
   expect(
-    screen.getByRole("heading", { name: "Page introuvable" }),
+    await screen.findByRole("heading", { name: "Page introuvable" }),
   ).toBeVisible();
 });

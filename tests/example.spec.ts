@@ -1,3 +1,4 @@
+import { loginOnCurrentPage, openAuthenticated } from "./auth-helper";
 import { test, expect } from "@playwright/test";
 const org = "/app/00000000-0000-4000-8000-000000000001";
 test("starts the app and navigates across organization placeholders", async ({
@@ -6,10 +7,11 @@ test("starts the app and navigates across organization placeholders", async ({
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
-  await expect(page).toHaveTitle("Ronet");
+  await expect(page).toHaveTitle("Ronetz");
   await page
     .getByRole("link", { name: "Aperçu de l’espace organisation" })
     .click();
+  await loginOnCurrentPage(page);
   await expect(
     page.getByRole("heading", { name: "Tableau de bord" }),
   ).toBeVisible();
@@ -56,8 +58,8 @@ for (const [path, title] of [
   ["/public", "Portail Wi-Fi"],
   ["/auth/login", "Connexion"],
   ["/auth/register", "Inscription"],
-  ["/onboarding", "Bienvenue dans votre organisation"],
-  ["/platform-admin", "Administration plateforme"],
+  ["/onboarding", "Connexion"],
+  ["/platform-admin", "Connexion"],
   ["/missing-page", "Page introuvable"],
 ]) {
   test(`route ${path}`, async ({ page }) => {
@@ -72,7 +74,7 @@ test("mobile navigation opens, closes and follows links at 320px", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 640 });
-  await page.goto(org);
+  await openAuthenticated(page, org);
   const toggle = page.getByRole("button", { name: "Basculer la navigation" });
   await toggle.click();
   await expect(page.getByRole("dialog", { name: "Navigation" })).toBeVisible();
@@ -96,7 +98,7 @@ test("mobile navigation opens, closes and follows links at 320px", async ({
 test("keyboard navigation, tablet and reduced motion", async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto(org);
+  await openAuthenticated(page, org);
   await expect(
     page.getByRole("button", { name: "Basculer la navigation" }),
   ).toBeEnabled();

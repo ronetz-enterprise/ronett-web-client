@@ -1,10 +1,11 @@
+import { openAuthenticated } from "./auth-helper";
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect } from "@playwright/test";
 const org = "/app/00000000-0000-4000-8000-000000000001";
 test("accessible shell in light and dark, mobile focus and text zoom", async ({
   page,
 }, testInfo) => {
-  await page.goto(org);
+  await openAuthenticated(page, org);
   await expect(
     page.getByRole("button", { name: "Basculer la navigation" }),
   ).toBeEnabled();
@@ -42,11 +43,13 @@ test("accessible shell in light and dark, mobile focus and text zoom", async ({
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "200%";
   });
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
-  ).toBe(true);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    )
+    .toBe(true);
 });
 test("accessible public, auth and confirmation views", async ({ page }) => {
   for (const path of ["/public", "/auth/login", "/__dev/socle"]) {

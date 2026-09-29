@@ -143,3 +143,4 @@ nav-user.tsx et nav-projects.tsx restent préservés dans src/app/layouts/sideba
 - app/lib/utils.ts → src/shared/utils/cn.ts
 - app/components/nav-user.tsx → src/app/layouts/sidebar/nav-user.tsx
 - app/components/nav-projects.tsx → src/app/layouts/sidebar/nav-projects.tsx
+- vite.config.ts : découverte initiale des dépendances des routes sous src.

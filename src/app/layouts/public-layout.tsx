@@ -5,7 +5,7 @@ export default function PublicLayout() {
     <div className="min-h-svh">
       <header className="border-b p-4">
         <Link to="/" className="font-heading text-xl font-semibold">
-          Ronet
+          Ronetz
         </Link>
       </header>
       <main

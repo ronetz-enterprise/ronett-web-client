@@ -1,3 +1,5 @@
+import { OnboardingProvider } from "@/features/onboarding";
+import { AuthProvider } from "@/features/authentication";
 import { ThemeProvider } from "./theme-provider";
 import { useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -13,7 +15,11 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={client}>
         <ThemeProvider>
           <TooltipProvider>
-            <NotificationProvider>{children}</NotificationProvider>
+            <NotificationProvider>
+              <AuthProvider>
+                <OnboardingProvider>{children}</OnboardingProvider>
+              </AuthProvider>
+            </NotificationProvider>
           </TooltipProvider>
         </ThemeProvider>
       </QueryClientProvider>

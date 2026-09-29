@@ -1,17 +1,37 @@
+import { Badge } from "@/shared/ui/badge";
+import { Skeleton } from "@/shared/ui/skeleton";
+import { Alert, AlertTitle, AlertDescription } from "@/shared/ui/alert";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyDescription,
+  EmptyContent,
+  EmptyMedia,
+} from "@/shared/ui/empty";
+import { statusTones, type StatusTone } from "./status";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { ApiError, toUserMessage } from "@/shared/errors/api-error";
 
 export function PageLoading() {
   return (
-    <p role="status" className="p-4">
-      Chargement…
-    </p>
+    <div
+      role="status"
+      className="w-full space-y-6 p-4"
+      aria-label="Chargement du contenu"
+    >
+      <div aria-hidden="true" className="space-y-3">
+        <Skeleton className="h-8 w-1/2 max-w-72" />
+        <Skeleton className="h-4 w-2/3 max-w-96" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+      <span className="sr-only">Chargement…</span>
+    </div>
   );
 }
 export function AppLoading() {
   return (
-    <main className="grid min-h-svh place-items-center">
+    <main className="mx-auto flex min-h-svh max-w-5xl items-center p-4">
       <PageLoading />
     </main>
   );
@@ -19,33 +39,72 @@ export function AppLoading() {
 export function PageHeader({
   title,
   description,
+  actions,
+  breadcrumb,
+  status,
 }: {
   title: string;
   description?: string;
+  actions?: React.ReactNode;
+  breadcrumb?: React.ReactNode;
+  status?: React.ReactNode;
 }) {
   return (
-    <header className="space-y-2">
-      <h1 className="font-heading text-2xl font-semibold">{title}</h1>
-      {description && (
-        <p className="text-sm text-muted-foreground">{description}</p>
-      )}
+    <header className="space-y-4">
+      {breadcrumb}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-heading text-2xl font-semibold tracking-tight break-words">
+              {title}
+            </h1>
+            {status}
+          </div>
+          {description && (
+            <p className="max-w-prose text-sm text-muted-foreground">
+              {description}
+            </p>
+          )}
+        </div>
+        {actions && (
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {actions}
+          </div>
+        )}
+      </div>
     </header>
   );
 }
 export function EmptyState({
   title = "Aucune donnée",
   description,
+  actions,
+  icon,
 }: {
   title?: string;
   description?: string;
+  actions?: React.ReactNode;
+  icon?: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-dashed p-6">
-      <h2 className="font-medium">{title}</h2>
-      {description && (
-        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+    <Empty className="items-start border text-left">
+      <EmptyHeader className="max-w-prose items-start">
+        {icon && (
+          <EmptyMedia variant="icon" aria-hidden="true">
+            {icon}
+          </EmptyMedia>
+        )}
+        <h2 className="font-heading text-sm font-semibold">{title}</h2>
+        {description && (
+          <EmptyDescription className="text-sm">{description}</EmptyDescription>
+        )}
+      </EmptyHeader>
+      {actions && (
+        <EmptyContent className="max-w-none flex-row flex-wrap justify-start">
+          {actions}
+        </EmptyContent>
       )}
-    </section>
+    </Empty>
   );
 }
 export function CorrelationIdDisplay({
@@ -87,11 +146,15 @@ export function ErrorState({
   children?: React.ReactNode;
 }) {
   return (
-    <section role="alert" className="space-y-3 rounded-xl border p-4">
-      <h2 className="font-semibold">{title}</h2>
-      <p>{message}</p>
-      {children}
-    </section>
+    <Alert variant="destructive">
+      <AlertTitle>
+        <h2>{title}</h2>
+      </AlertTitle>
+      <AlertDescription className="space-y-3 text-sm">
+        <p>{message}</p>
+        {children}
+      </AlertDescription>
+    </Alert>
   );
 }
 export function TechnicalError({
@@ -115,19 +178,15 @@ export function StatusBadge({
   tone = "neutral",
 }: {
   label: string;
-  tone?: "neutral" | "success" | "warning" | "danger";
+  tone?: StatusTone;
 }) {
-  const styles = {
-    neutral: "bg-muted text-foreground",
-    success: "bg-emerald-100 text-emerald-950",
-    warning: "bg-amber-100 text-amber-950",
-    danger: "bg-red-100 text-red-950",
-  };
   return (
-    <span
-      className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${styles[tone]}`}
+    <Badge
+      variant="secondary"
+      className={`h-6 gap-1.5 rounded-md text-xs ${statusTones[tone]}`}
     >
+      <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
       {label}
-    </span>
+    </Badge>
   );
 }

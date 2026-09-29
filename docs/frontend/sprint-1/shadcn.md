@@ -64,3 +64,5 @@ npm run format:check
 
 Les composants générés sont du code du projet : les pages et sections métier doivent conserver
 les responsabilités app/pages/features/shared documentées.
+
+Vite analyse les entrées et modules de routes de src au démarrage (optimizeDeps.entries), afin d’éviter les erreurs 504 Outdated Optimize Dep provoquées par la découverte tardive des dépendances des composants.

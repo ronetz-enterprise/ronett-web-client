@@ -10,6 +10,7 @@ import {
   type SubmitHandler,
   type UseFormReturn,
 } from "react-hook-form";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
 import {
@@ -59,10 +60,12 @@ export function FormField({
   label,
   description,
   type = "text",
+  autoComplete,
 }: {
   name: string;
   label: string;
   description?: string;
+  autoComplete?: string;
   type?: React.ComponentProps<typeof Input>["type"];
 }) {
   const id = useId();
@@ -76,6 +79,7 @@ export function FormField({
       <Input
         id={id}
         type={type}
+        autoComplete={autoComplete}
         {...register(name)}
         aria-invalid={!!error}
         aria-describedby={`${id}-description ${id}-error`}
@@ -98,22 +102,27 @@ export function ValidatedForm<T extends FieldValues>({
   onSubmit,
   children,
   submitLabel = "Valider",
+  disabled = false,
 }: {
   form: UseFormReturn<T>;
   onSubmit: SubmitHandler<T>;
   children: React.ReactNode;
   submitLabel?: string;
+  disabled?: boolean;
 }) {
   const lock = useRef(false);
+  const element = useRef<HTMLFormElement>(null);
   const { isSubmitting, submitCount, errors } = form.formState;
   useEffect(() => {
     if (isSubmitting || submitCount === 0) return;
-    const first = Object.keys(errors).find((name) => name !== "root");
-    if (first) form.setFocus(first as Path<T>);
+    // Follow visible form order, independently of schema/server error ordering.
+    element.current
+      ?.querySelector<HTMLElement>('[aria-invalid="true"]')
+      ?.focus();
   }, [isSubmitting, submitCount, errors, form]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (lock.current) return;
+    if (lock.current || disabled) return;
     lock.current = true;
     try {
       await form.handleSubmit(onSubmit)(event);
@@ -126,18 +135,41 @@ export function ValidatedForm<T extends FieldValues>({
   return (
     <FormProvider {...form}>
       <form
+        ref={element}
+        method="post"
         noValidate
         onSubmit={(event) => void submit(event)}
         aria-busy={form.formState.isSubmitting}
       >
-        <fieldset disabled={form.formState.isSubmitting} className="space-y-4">
+        <fieldset
+          disabled={disabled || form.formState.isSubmitting}
+          className="space-y-4"
+        >
           {children}
-          <Button type="submit">
-            {form.formState.isSubmitting ? "En cours…" : submitLabel}
+          <Button
+            type="submit"
+            className="relative min-h-10"
+            aria-busy={isSubmitting}
+          >
+            <span aria-hidden="true" className="size-4" />
+            {submitLabel}
+            <span
+              aria-hidden="true"
+              className={
+                isSubmitting
+                  ? "size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+                  : "size-4"
+              }
+            />
+            {isSubmitting && <span className="sr-only"> — En cours…</span>}
           </Button>
         </fieldset>
         {form.formState.errors.root?.message && (
-          <p role="alert">{form.formState.errors.root.message}</p>
+          <Alert variant="destructive" className="mt-4">
+            <AlertDescription>
+              {form.formState.errors.root.message}
+            </AlertDescription>
+          </Alert>
         )}
       </form>
     </FormProvider>

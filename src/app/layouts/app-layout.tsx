@@ -1,8 +1,8 @@
-import { useEffect } from "react";
 import { Outlet, useParams, useLocation, useNavigation } from "react-router";
-import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { AppSidebar } from "./sidebar/app-sidebar";
+import { NavbarOrganizationSelect } from "./navbar-organization-select";
+import { NavbarUserMenu } from "./navbar-user-menu";
 import {
   SidebarProvider,
   SidebarInset,
@@ -15,9 +15,6 @@ import {
   BreadcrumbItem,
   BreadcrumbPage,
 } from "@/shared/ui/breadcrumb";
-import { PageLoading } from "@/shared/components/feedback";
-import { clearOrganizationCache } from "@/shared/api/query-client";
-import type { OrganizationContext } from "@/shared/auth/organization-context";
 import NotFoundPage from "@/pages/public/not-found-page";
 import { navigationFor } from "@/app/router/navigation";
 export function OrganizationShell({
@@ -25,21 +22,11 @@ export function OrganizationShell({
 }: {
   organizationId?: string;
 }) {
-  const client = useQueryClient();
   const location = useLocation();
   const navigation = useNavigation();
-  useEffect(
-    () => () => {
-      if (organizationId) clearOrganizationCache(client, organizationId);
-    },
-    [client, organizationId],
-  );
   const title =
     navigationFor(organizationId).find((item) => item.url === location.pathname)
-      ?.title ?? "Ronet";
-  const context: OrganizationContext | undefined = organizationId
-    ? { organizationId, provisional: true }
-    : undefined;
+      ?.title ?? "Ronetz";
   return (
     <SidebarProvider>
       <a
@@ -50,33 +37,40 @@ export function OrganizationShell({
       </a>
       <AppSidebar organizationId={organizationId} />
       <SidebarInset className="min-w-0">
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex min-w-0 items-center gap-2 px-4">
+        <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b px-2 py-2 sm:px-4">
+          <div className="flex min-w-0 items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator
               orientation="vertical"
-              className="mr-2 data-vertical:h-4 data-vertical:self-auto"
+              className="hidden sm:block mr-2 data-vertical:h-4 data-vertical:self-auto"
             />
-            <Breadcrumb>
+            <Breadcrumb className="hidden md:block">
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbPage>{title}</BreadcrumbPage>
+                  <BreadcrumbPage role={undefined} aria-disabled={undefined}>
+                    {title}
+                  </BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
+          </div>
+          <div className="flex min-w-0 max-w-full flex-1 items-center justify-end gap-2">
+            <NavbarOrganizationSelect />
+            <NavbarUserMenu />
           </div>
         </header>
         <div
           id="main-content"
           tabIndex={-1}
-          className="flex min-w-0 flex-1 flex-col gap-4 p-4 pt-0"
+          className="relative mx-auto flex w-full min-w-0 max-w-screen-2xl flex-1 flex-col gap-6 p-4 sm:p-6 lg:p-8"
         >
-          <p className="rounded-lg bg-muted px-3 py-2 text-xs">
-            Aperçu structurel — authentification et permissions non activées.
-          </p>
-          {navigation.state !== "idle" && <PageLoading />}
-          <div key={organizationId ?? "platform"} className="space-y-6">
-            <Outlet context={context} />
+          {navigation.state !== "idle" && (
+            <p role="status" className="text-xs text-muted-foreground">
+              Chargement de la destination…
+            </p>
+          )}
+          <div key={organizationId ?? "platform"} className="min-w-0 space-y-8">
+            <Outlet />
           </div>
         </div>
       </SidebarInset>

@@ -194,7 +194,7 @@ function Sidebar({
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>
             <SheetDescription>
-              Navigation de votre espace Ronet.
+              Navigation de votre espace Ronetz.
             </SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
