@@ -1,4 +1,6 @@
 import { useRef, useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { More01Icon } from "@hugeicons/core-free-icons";
 import type { Membership } from "@/features/memberships";
 import { notificationManager } from "@/shared/components/notifications";
 import { Button } from "@/shared/ui/button";
@@ -63,15 +65,16 @@ export function SiteActions({
           ref={trigger}
           render={
             <Button
-              variant="outline"
+              variant="ghost"
+              size="icon-sm"
               disabled={mutation.pending}
               aria-label={`Actions pour ${site.name}`}
             />
           }
         >
-          Actions
+          <HugeiconsIcon icon={More01Icon} strokeWidth={2} />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-48">
           {actions.map((action) => (
             <DropdownMenuItem
               key={action}

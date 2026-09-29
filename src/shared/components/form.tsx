@@ -13,6 +13,7 @@ import {
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
+import { cn } from "cn";
 import {
   ApiError,
   extractFieldErrors,
@@ -103,12 +104,15 @@ export function ValidatedForm<T extends FieldValues>({
   children,
   submitLabel = "Valider",
   disabled = false,
+  footer,
 }: {
   form: UseFormReturn<T>;
   onSubmit: SubmitHandler<T>;
   children: React.ReactNode;
   submitLabel?: string;
   disabled?: boolean;
+  /** Actions secondaires alignees a gauche du bouton de soumission. */
+  footer?: React.ReactNode;
 }) {
   const lock = useRef(false);
   const element = useRef<HTMLFormElement>(null);
@@ -146,23 +150,31 @@ export function ValidatedForm<T extends FieldValues>({
           className="space-y-4"
         >
           {children}
-          <Button
-            type="submit"
-            className="relative min-h-10"
-            aria-busy={isSubmitting}
+          <div
+            className={cn(
+              "flex flex-wrap items-center gap-2",
+              footer && "justify-end",
+            )}
           >
-            <span aria-hidden="true" className="size-4" />
-            {submitLabel}
-            <span
-              aria-hidden="true"
-              className={
-                isSubmitting
-                  ? "size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
-                  : "size-4"
-              }
-            />
-            {isSubmitting && <span className="sr-only"> — En cours…</span>}
-          </Button>
+            {footer}
+            <Button
+              type="submit"
+              className="relative min-h-10"
+              aria-busy={isSubmitting}
+            >
+              <span aria-hidden="true" className="size-4" />
+              {submitLabel}
+              <span
+                aria-hidden="true"
+                className={
+                  isSubmitting
+                    ? "size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+                    : "size-4"
+                }
+              />
+              {isSubmitting && <span className="sr-only"> — En cours…</span>}
+            </Button>
+          </div>
         </fieldset>
         {form.formState.errors.root?.message && (
           <Alert variant="destructive" className="mt-4">

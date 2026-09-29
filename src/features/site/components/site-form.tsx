@@ -90,9 +90,19 @@ export function SiteForm({
         form={form}
         onSubmit={save}
         disabled={mutation.pending}
-        submitLabel={site ? "Enregistrer les modifications" : "Créer le site"}
+        submitLabel={site ? "Enregistrer" : "Créer le site"}
+        footer={
+          <Button
+            variant="outline"
+            className="rounded-full"
+            disabled={mutation.pending}
+            render={<Link to={cancel} />}
+          >
+            Annuler
+          </Button>
+        }
       >
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
           <FormField
             name="name"
             label="Nom du site"
@@ -142,13 +152,6 @@ export function SiteForm({
         </div>
       </ValidatedForm>
       {mutation.isError && <SiteFailure error={mutation.error} />}
-      <Button
-        variant="outline"
-        disabled={mutation.pending}
-        render={<Link to={cancel} />}
-      >
-        Annuler
-      </Button>
     </div>
   );
 }
