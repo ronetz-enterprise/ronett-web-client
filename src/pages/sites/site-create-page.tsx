@@ -1,10 +1,14 @@
+import { Navigate } from "react-router";
 import { useActiveOrganization } from "@/features/organizations";
-import { SiteCreate, SiteShell } from "@/features/site";
+import { siteRoutes } from "@/features/site";
+
+/** Ancienne adresse : la création se fait désormais dans une modale, sur la liste des sites. */
 export default function SiteCreatePage() {
   const active = useActiveOrganization();
   return (
-    <SiteShell className="min-w-0">
-      <SiteCreate key={active.organizationId} active={active} />
-    </SiteShell>
+    <Navigate
+      replace
+      to={`${siteRoutes.list(active.organizationId)}?create=site`}
+    />
   );
 }

@@ -1,6 +1,10 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { loginOnCurrentPage, openAuthenticated } from "./auth-helper";
+import {
+  loginOnCurrentPage,
+  openAuthenticated,
+  switchOrganization,
+} from "./auth-helper";
 test("zero organizations then creation confirms real OWNER and opens dashboard once", async ({
   page,
 }) => {
@@ -110,10 +114,7 @@ test("multiple organizations offer a choice and switch URL and dashboard togethe
   ).toBeVisible();
   await page.getByRole("link", { name: "Organisation A", exact: true }).click();
   await expect(page.getByText("Organisation A · OWNER")).toBeVisible();
-  await page.getByRole("combobox", { name: "Organisation active" }).click();
-  await page
-    .getByRole("option", { name: "Organisation B", exact: true })
-    .click();
+  await switchOrganization(page, "Organisation B");
   await expect(page).toHaveURL("/app/00000000-0000-4000-8000-000000000002");
   await expect(page.getByText("Organisation B · OWNER")).toBeVisible();
   await expect(page.getByText("Organisation A · OWNER")).toBeHidden();
@@ -172,7 +173,7 @@ test("logout discards the creation receipt before another user's session", async
   await expect(
     page.getByRole("heading", { name: "Tableau de bord" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Ma session", exact: true }).click();
+  await page.getByRole("link", { name: "Mon compte", exact: true }).click();
   await page.getByRole("button", { name: "Se déconnecter" }).click();
   await expect(page.getByText("Session serveur révoquée.")).toBeVisible();
   await loginOnCurrentPage(page, "next@example.test");

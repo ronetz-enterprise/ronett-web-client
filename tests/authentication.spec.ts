@@ -97,7 +97,7 @@ test("logout revokes server session and back navigation cannot reveal protected 
     page.getByRole("heading", { name: "Connexion", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Ma session", exact: true }),
+    page.getByRole("heading", { name: "Mon compte", exact: true }),
   ).toBeHidden();
 });
 test("failed server logout still clears locally and reports revocation uncertainty", async ({

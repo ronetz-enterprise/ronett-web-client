@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { FormField, ValidatedForm } from "@/shared/components/form";
 import {
-  FormField,
-  ValidatedForm,
   zodResolver,
   applyApiFieldErrors,
-} from "@/shared/components/form";
+} from "@/shared/components/form-utils";
 import { PasswordField } from "@/shared/components/password-field";
 import { CorrelationIdDisplay } from "@/shared/components/feedback";
 import { ApiError } from "@/shared/errors/api-error";
@@ -37,6 +36,7 @@ export function LoginForm({ onSuccess }: { onSuccess: () => void }) {
   return (
     <>
       <ValidatedForm
+        guardUnsavedChanges={false}
         form={form}
         disabled={!hydrated || auth.status === "initializing"}
         submitLabel="Se connecter"
@@ -78,12 +78,12 @@ export function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
       lastName: "",
       email: "",
       password: "",
-      confirmation: "",
     },
   });
   return (
     <>
       <ValidatedForm
+        guardUnsavedChanges={false}
         form={form}
         disabled={!hydrated}
         submitLabel="Créer mon compte"
@@ -96,7 +96,6 @@ export function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
           } catch (failure) {
             setError(failure);
             form.resetField("password");
-            form.resetField("confirmation");
             applyApiFieldErrors(failure, form, [
               "email",
               "firstName",
@@ -127,11 +126,6 @@ export function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
           autoComplete="email"
         />
         <PasswordField autoComplete="new-password" />
-        <PasswordField
-          name="confirmation"
-          label="Confirmation du mot de passe"
-          autoComplete="new-password"
-        />
       </ValidatedForm>
       <ErrorReference error={error} />
     </>

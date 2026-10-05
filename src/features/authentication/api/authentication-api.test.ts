@@ -29,7 +29,6 @@ it("sends exact normalized DTOs without bearer cookies or confirmation", async (
     ...input,
     firstName: "Test",
     lastName: "Fixture",
-    confirmation: input.password,
   });
   expect(registration).toEqual({
     email: "test@example.test",

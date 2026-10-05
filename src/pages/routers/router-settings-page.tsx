@@ -12,7 +12,7 @@ export default function RouterSettingsPage() {
       active={active}
       routerId={routerId}
       expectedSite={expectedSite}
-      editing
+      tab="settings"
     />
   );
 }

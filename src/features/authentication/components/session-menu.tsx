@@ -12,7 +12,7 @@ export function SessionMenu() {
     <div className="min-w-0 space-y-2 text-sm group-data-[collapsible=icon]:hidden">
       <p className="break-all">{principal.data?.email ?? auth.loginEmail}</p>
       <Link className="block underline" to="/account">
-        Ma session
+        Mon compte
       </Link>
       <Button
         variant="outline"

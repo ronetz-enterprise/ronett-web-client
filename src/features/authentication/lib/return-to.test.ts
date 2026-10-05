@@ -6,6 +6,8 @@ it("preserves supported internal destinations only", () => {
     "/onboarding",
     "/onboarding/organization",
     "/app/00000000-0000-4000-8000-000000000001/organization",
+    "/platform-admin",
+    "/platform-admin/organizations",
   ])
     expect(safeAuthDestination(path)).toBe(path);
 });
@@ -16,7 +18,7 @@ it.each([
   "/%2f%2fevil.test",
   "/%252f%252fevil.test",
   "/auth/login",
-  "/platform-admin",
+  "/platform-admin/organizations/00000000-0000-4000-8000-000000000001",
   "/app/../auth/login",
   "/account?accessToken=secret",
   "/account#token",

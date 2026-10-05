@@ -36,7 +36,7 @@ export function OrganizationAccessNotice({
         Mes organisations
       </Link>
       <Link className="block underline" to="/account">
-        Ma session
+        Mon compte
       </Link>
     </section>
   );

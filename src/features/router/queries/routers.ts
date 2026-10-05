@@ -19,6 +19,8 @@ import {
   routerCreateSchema,
   routerNameSchema,
   isTrackingState,
+  artifactFileName,
+  opaqueReference,
   type Router,
   type RouterAction,
   type RouterCreateValues,
@@ -85,10 +87,10 @@ export function useRouterList(active: Membership, page: number, size: number) {
     queryFn: async ({ signal }) => {
       try {
         const result = routerPageSchema.safeParse(
-          await request(
-            `/api/organizations/${active.organizationId}/routers?page=${page}&size=${size}`,
-            { signal },
-          ),
+          await request(`/api/organizations/${active.organizationId}/routers`, {
+            signal,
+            query: { page: String(page), size: String(size) },
+          }),
         );
         if (
           !result.success ||
@@ -157,6 +159,8 @@ export function useRouterTracking(
   const [deadline, setDeadline] = useState(() => Date.now() + 300_000);
   const [enabled, setEnabled] = useState(true);
   const awaiting = (current: Router) => {
+    // Displayed states (e.g. SUSPENDED) are only confirmed once nothing is pending.
+    if (current.pendingAction !== null) return true;
     if (
       current.lifecycleStatus === "REVOKED" ||
       current.failureCode ||
@@ -297,11 +301,18 @@ export function useRouterChange(active: Membership) {
         change.expectedSite,
       );
       const caps = routerCapabilities(active, current.router, current.site);
-      // The server remains authoritative for non-public pendingAction and idempotent replay.
+      // The server remains authoritative for transitions and idempotent replay.
       if (
         change.action === "rename" ? !caps.canEditRouter : !caps.canCreateRouter
       )
         throw new ApiError("http", 403);
+      // Replaying the pending action is deduplicated; any other command answers 409.
+      if (
+        change.action !== "rename" &&
+        current.router.pendingAction !== null &&
+        current.router.pendingAction !== change.action.toUpperCase()
+      )
+        throw new ApiError("http", 409);
       if (!mounted.current) throw new ApiError("aborted");
       if (change.action === "rename")
         return parsedRouter(
@@ -356,4 +367,94 @@ export function useRouterChange(active: Membership) {
       }
     },
   };
+}
+const scriptSchema = z.custom<Blob>(
+  (value) =>
+    typeof value === "object" &&
+    value !== null &&
+    "size" in value &&
+    "type" in value &&
+    typeof value.size === "number" &&
+    value.size > 0 &&
+    value.size <= 65_536 &&
+    typeof value.type === "string" &&
+    (value.type === "" || value.type.toLowerCase().startsWith("text/plain")),
+);
+/**
+ * Current configuration script (RouterOS `.rsc`). It embeds the router credential: it is
+ * never stored in TanStack Query, never logged, and only handed to the browser download.
+ */
+export function useRouterArtifactDownload(active: Membership, router: Router) {
+  const { request } = useAuth();
+  const client = useQueryClient();
+  const [state, setState] = useState<{
+    pending: boolean;
+    error: unknown;
+  }>({ pending: false, error: null });
+  const running = useRef(false),
+    mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  async function download() {
+    const artifactId = router.configurationArtifactId;
+    if (running.current || !artifactId) return false;
+    running.current = true;
+    setState({ pending: true, error: null });
+    try {
+      if (!routerCapabilities(active, router).download)
+        throw new ApiError("http", 403);
+      const result = scriptSchema.safeParse(
+        await request(
+          `${path(router.id)}/configuration-artifacts/${opaqueReference.parse(artifactId)}`,
+          {
+            headers: { Accept: "text/plain, application/problem+json" },
+            responseType: "blob",
+          },
+        ),
+      );
+      if (!result.success) throw new ApiError("invalid-response");
+      if (!mounted.current) return false;
+      saveFile(result.data, artifactFileName(router));
+      setState({ pending: false, error: null });
+      return true;
+    } catch (error) {
+      if (mounted.current) setState({ pending: false, error });
+      if (error instanceof ApiError && [404, 409, 410].includes(error.status))
+        void client.invalidateQueries({
+          queryKey: routerKeys.all(active.organizationId),
+        });
+      else if (error instanceof ApiError && [401, 403].includes(error.status))
+        void client.invalidateQueries({
+          queryKey: membershipKeys.access(active.organizationId),
+        });
+      return false;
+    } finally {
+      running.current = false;
+    }
+  }
+  return {
+    ...state,
+    download,
+    reset: () => setState({ pending: false, error: null }),
+  };
+}
+function saveFile(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  link.rel = "noopener";
+  link.style.display = "none";
+  document.body.append(link);
+  try {
+    link.click();
+  } finally {
+    link.remove();
+    // Let the browser start the download before releasing the object URL.
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
 }

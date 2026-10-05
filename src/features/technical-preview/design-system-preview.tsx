@@ -1,3 +1,4 @@
+import { ExpressiveSpecimens } from "./expressive-preview";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -73,10 +74,10 @@ function Specimens({ prefix }: { prefix: string }) {
       </PageSection>
       <PageSection title="Typographie">
         <p className="font-heading text-lg font-semibold">
-          Titre de section · Manrope
+          Titre de section · Geist semibold
         </p>
-        <p>Corps et données · Inter · 14 px</p>
-        <p className="text-xs text-muted-foreground">Métadonnées · 12 px</p>
+        <p>Corps et données · Geist · 15 px</p>
+        <p className="text-xs text-muted-foreground">Métadonnées · 13 px</p>
       </PageSection>
       <PageSection title="Actions">
         <div className="flex flex-wrap gap-2">
@@ -231,6 +232,7 @@ export function DesignSystemPreview() {
       <div className={dark ? "dark" : ""}>
         <div className="rounded-lg border bg-background p-4 text-foreground sm:p-6">
           <Specimens prefix="reference" />
+          <ExpressiveSpecimens />
         </div>
       </div>
     </section>

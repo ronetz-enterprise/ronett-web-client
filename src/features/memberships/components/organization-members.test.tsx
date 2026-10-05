@@ -192,3 +192,14 @@ it("keeps a rejected mutation visible without exposing backend detail", async ()
   expect(await screen.findByRole("alert")).toHaveTextContent("conflit");
   expect(screen.queryByText("sensitive internal text")).not.toBeInTheDocument();
 });
+
+it("présente chaque membre avec son rôle et repère l'utilisateur courant", async () => {
+  view();
+  await screen.findByText(fixtureOtherUser);
+  const mine = screen.getByRole("row", {
+    name: new RegExp(fixtureCurrentUser),
+  });
+  expect(within(mine).getByText("Vous")).toBeVisible();
+  expect(within(mine).getByText("Propriétaire")).toBeVisible();
+  expect(screen.getByRole("status")).toHaveTextContent(/\d+ membres?/);
+});

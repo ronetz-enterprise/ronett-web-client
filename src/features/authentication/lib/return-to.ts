@@ -11,6 +11,7 @@ export function safeAuthDestination(value: unknown): string {
       "/account",
       "/organizations/select",
       "/onboarding/status",
+      "/platform-admin",
     ].includes(value)
   )
     return value;
@@ -19,6 +20,9 @@ export function safeAuthDestination(value: unknown): string {
       value,
     )
   )
+    return value;
+  // La console plateforme est un point d'entree authorize par le backend.
+  if (/^\/platform-admin(\/organizations|\/reseau|\/audit)?$/.test(value))
     return value;
   return fallback;
 }

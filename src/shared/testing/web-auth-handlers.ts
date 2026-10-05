@@ -100,6 +100,38 @@ export const webAuthHandlers = [
       platformAdmin: false,
     });
   }),
+  // La console plateforme n'est pas simulee en fixture : un compte ordinaire
+  // y recoit le meme refus que la plateforme reelle.
+  http.get(base + "/api/platform/session", ({ request }) => {
+    const user = fixtureEmail(request);
+    if (!user || revoked.has(user)) return problem(401);
+    return problem(403, "PLATFORM_ADMIN_FORBIDDEN");
+  }),
+  http.get(base + "/api/platform/dashboard", ({ request }) => {
+    const user = fixtureEmail(request);
+    if (!user || revoked.has(user)) return problem(401);
+    return problem(403, "PLATFORM_ADMIN_FORBIDDEN");
+  }),
+  http.get(base + "/api/platform/organizations", ({ request }) => {
+    const user = fixtureEmail(request);
+    if (!user || revoked.has(user)) return problem(401);
+    return problem(403, "PLATFORM_ADMIN_FORBIDDEN");
+  }),
+  http.get(base + "/api/platform/sites", ({ request }) => {
+    const user = fixtureEmail(request);
+    if (!user || revoked.has(user)) return problem(401);
+    return problem(403, "PLATFORM_ADMIN_FORBIDDEN");
+  }),
+  http.get(base + "/api/platform/routers", ({ request }) => {
+    const user = fixtureEmail(request);
+    if (!user || revoked.has(user)) return problem(401);
+    return problem(403, "PLATFORM_ADMIN_FORBIDDEN");
+  }),
+  http.get(base + "/api/platform/audit-entries", ({ request }) => {
+    const user = fixtureEmail(request);
+    if (!user || revoked.has(user)) return problem(401);
+    return problem(403, "PLATFORM_ADMIN_FORBIDDEN");
+  }),
   http.get(base + "/api/me/memberships", ({ request }) => {
     const user = fixtureEmail(request);
     if (!user || revoked.has(user)) return problem(401);

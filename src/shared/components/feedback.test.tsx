@@ -74,8 +74,10 @@ it("opens an accessible confirmation and closes with Escape", async () => {
     />,
   );
   await user.click(screen.getByRole("button", { name: "Ouvrir" }));
-  expect(screen.getByRole("dialog", { name: "Confirmer ?" })).toBeVisible();
+  expect(
+    screen.getByRole("alertdialog", { name: "Confirmer ?" }),
+  ).toBeVisible();
   await user.keyboard("{Escape}");
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   expect(confirm).not.toHaveBeenCalled();
 });

@@ -8,27 +8,26 @@ test("starts the app and navigates across organization placeholders", async ({
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await expect(page).toHaveTitle("Ronetz");
-  await page
-    .getByRole("link", { name: "Aperçu de l’espace organisation" })
-    .click();
+  await expect(page.getByRole("link", { name: "Se connecter" })).toBeVisible();
+  await page.goto(org);
   await loginOnCurrentPage(page);
   await expect(
-    page.getByRole("heading", { name: "Tableau de bord" }),
+    page.getByRole("heading", { level: 1, name: /Bonjour|Tableau de bord/ }),
   ).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Espace organisation" }),
   ).toBeVisible();
   await page
     .getByRole("navigation", { name: "Espace organisation" })
-    .getByRole("link", { name: "Organisation", exact: true })
+    .getByRole("link", { name: "Paramètres", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Organisation", exact: true }),
+    page.getByRole("heading", { name: "Paramètres", exact: true }),
   ).toBeVisible();
   await expect(
     page
       .getByRole("navigation", { name: "Espace organisation" })
-      .getByRole("link", { name: "Organisation", exact: true }),
+      .getByRole("link", { name: "Paramètres", exact: true }),
   ).toHaveAttribute("aria-current", "page");
   await page
     .getByRole("button", { name: "Basculer la navigation", exact: true })
@@ -83,11 +82,11 @@ test("mobile navigation opens, closes and follows links at 320px", async ({
   await toggle.click();
   await page
     .getByRole("navigation", { name: "Espace organisation" })
-    .getByRole("link", { name: "Organisation", exact: true })
+    .getByRole("link", { name: "Paramètres", exact: true })
     .click();
   await expect(page.getByRole("dialog")).toBeHidden();
   await expect(
-    page.getByRole("heading", { name: "Organisation", exact: true }),
+    page.getByRole("heading", { name: "Paramètres", exact: true }),
   ).toBeVisible();
   expect(
     await page.evaluate(

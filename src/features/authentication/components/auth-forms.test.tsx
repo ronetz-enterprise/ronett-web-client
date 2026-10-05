@@ -33,10 +33,6 @@ async function fillRegister(
     screen.getByLabelText("Mot de passe", { exact: true }),
     "Fixture-pass-123",
   );
-  await user.type(
-    screen.getByLabelText("Confirmation du mot de passe"),
-    "Fixture-pass-123",
-  );
 }
 it("logs in with accessible controls, reveal and normalized email, then clears fields", async () => {
   const { user, onSuccess } = view("login");

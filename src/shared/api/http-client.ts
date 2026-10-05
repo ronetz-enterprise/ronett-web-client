@@ -9,6 +9,14 @@ export type RequestOptions = Omit<
   "body" | "signal" | "redirect"
 > & {
   body?: unknown;
+  query?: Readonly<Record<string, string>>;
+  /** Optional exact JSON representation for contracts using decimals/int64. */
+  jsonCodec?: {
+    parse: (text: string) => unknown;
+    stringify: (value: unknown) => string;
+  };
+  /** `blob` returns a successful body untouched (files); errors stay Problem Details. */
+  responseType?: "json" | "blob";
   signal?: AbortSignal;
   timeoutMs?: number;
   accessToken?: string;
@@ -21,7 +29,16 @@ export function createHttpClient(baseUrl: string) {
     // Never forward bearer tokens to an arbitrary origin.
     if (!path.startsWith("/") || path.startsWith("//") || path.includes("\\"))
       throw new Error("Chemin API relatif requis.");
-    const { body, signal, timeoutMs = 15_000, accessToken, ...init } = options;
+    const {
+      body,
+      jsonCodec,
+      query,
+      responseType = "json",
+      signal,
+      timeoutMs = 15_000,
+      accessToken,
+      ...init
+    } = options;
     const headers = new Headers(init.headers);
     if (!headers.has("Accept"))
       headers.set("Accept", "application/json, application/problem+json");
@@ -38,16 +55,22 @@ export function createHttpClient(baseUrl: string) {
     }, timeoutMs);
     let response: Response | undefined;
     try {
-      response = await fetch(`${baseUrl.replace(/\/+$/, "")}${path}`, {
+      const suffix = query ? "?" + new URLSearchParams(query).toString() : "";
+      response = await fetch(`${baseUrl.replace(/\/+$/, "")}${path}${suffix}`, {
         ...init,
         headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body:
+          body === undefined
+            ? undefined
+            : (jsonCodec?.stringify ?? JSON.stringify)(body),
         credentials: options.credentials ?? "omit",
         redirect: "error",
         cache: "no-store",
         signal: controller.signal,
       });
       if (response.status === 204) return undefined as T;
+      if (responseType === "blob" && response.ok)
+        return (await response.blob()) as T;
       const text = await response.text();
       const json = response.headers
         .get("Content-Type")
@@ -56,7 +79,8 @@ export function createHttpClient(baseUrl: string) {
       let value: unknown = text;
       if (json && text) {
         try {
-          value = JSON.parse(text);
+          value =
+            response.ok && jsonCodec ? jsonCodec.parse(text) : JSON.parse(text);
         } catch {
           if (response.ok)
             throw new ApiError(

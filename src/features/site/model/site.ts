@@ -67,9 +67,14 @@ export function siteCapabilities(active: Membership, site?: Site) {
 }
 export const siteRoutes = {
   list: (org: string) => `/app/${z.uuid().parse(org)}/sites`,
-  create: (org: string) => `${siteRoutes.list(org)}/new`,
+  // Ouvre la modale de création par-dessus la page courante.
+  create: () => "?create=site",
   detail: (org: string, id: string) =>
     `${siteRoutes.list(org)}/${z.uuid().parse(id)}`,
   settings: (org: string, id: string) =>
     `${siteRoutes.detail(org, id)}/settings`,
+  routers: (org: string, id: string) => `${siteRoutes.detail(org, id)}/routers`,
+  offers: (org: string, id: string) => `${siteRoutes.detail(org, id)}/offers`,
+  /** Portail public d'achat du site, partagé aux clients (lien et QR code). */
+  portal: (id: string) => `/connect/${z.uuid().parse(id)}`,
 };

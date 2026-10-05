@@ -38,10 +38,8 @@ for (const width of [375, 768, 1280, 1440]) {
       await expect(
         page.getByRole("heading", { name: "Tableau de bord" }),
       ).toBeVisible();
-      await expect(
-        page.getByRole("combobox", { name: "Organisation active" }),
-      ).toBeEnabled();
       await capture(page, info, "dashboard");
+      const account = page.getByRole("button", { name: /compte utilisateur$/ });
       const toggle = page.getByRole("button", {
         name: "Basculer la navigation",
         exact: true,
@@ -51,26 +49,29 @@ for (const width of [375, 768, 1280, 1440]) {
         await expect(
           page.getByRole("dialog", { name: "Navigation" }),
         ).toBeVisible();
+        // Le menu de compte est porte par le tiroir, pas par la barre haute.
+        await expect(account).toBeVisible();
         await capture(page, info, "mobile-navigation");
         await page.keyboard.press("Escape");
         await expect(toggle).toBeFocused();
       } else {
+        await expect(account).toBeVisible();
         await expect(
           page.locator('[data-slot="sidebar"]').first(),
         ).toHaveAttribute("data-state", "collapsed");
         await capture(page, info, "sidebar-collapsed");
-        const members = page
+        const settings = page
           .getByRole("navigation", { name: "Espace organisation" })
           .getByRole("link", {
-            name: "Membres",
+            name: "Paramètres",
             exact: true,
           });
         await page.keyboard.press("Tab");
-        await members.focus();
+        await settings.focus();
         await expect(
           page
             .locator('[data-slot="tooltip-content"]')
-            .filter({ hasText: /^Membres$/ }),
+            .filter({ hasText: /^Paramètres$/ }),
         ).toBeVisible();
         await toggle.click();
       }

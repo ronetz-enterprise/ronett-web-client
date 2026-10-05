@@ -57,7 +57,7 @@ export function NavProjects({
               >
                 <HugeiconsIcon
                   icon={MoreHorizontalCircle01Icon}
-                  strokeWidth={2}
+                  strokeWidth={1.75}
                 />
                 <span className="sr-only">More</span>
               </DropdownMenuTrigger>
@@ -67,16 +67,16 @@ export function NavProjects({
                 align={isMobile ? "end" : "start"}
               >
                 <DropdownMenuItem>
-                  <HugeiconsIcon icon={FolderIcon} strokeWidth={2} />
+                  <HugeiconsIcon icon={FolderIcon} strokeWidth={1.75} />
                   <span>View Project</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <HugeiconsIcon icon={ArrowRightIcon} strokeWidth={2} />
+                  <HugeiconsIcon icon={ArrowRightIcon} strokeWidth={1.75} />
                   <span>Share Project</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive">
-                  <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
+                  <HugeiconsIcon icon={Delete02Icon} strokeWidth={1.75} />
                   <span>Delete Project</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -87,7 +87,7 @@ export function NavProjects({
           <SidebarMenuButton className="text-sidebar-foreground/70">
             <HugeiconsIcon
               icon={MoreHorizontalCircle01Icon}
-              strokeWidth={2}
+              strokeWidth={1.75}
               className="text-sidebar-foreground/70"
             />
             <span>More</span>

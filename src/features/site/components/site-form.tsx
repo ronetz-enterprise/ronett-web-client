@@ -1,13 +1,13 @@
+import { useFormDialog } from "@/shared/components/form-dialog-context";
 import { useId } from "react";
 import { Link, useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import type { Membership } from "@/features/memberships";
+import { FormField, ValidatedForm } from "@/shared/components/form";
 import {
-  FormField,
-  ValidatedForm,
   applyApiFieldErrors,
   zodResolver,
-} from "@/shared/components/form";
+} from "@/shared/components/form-utils";
 import { notificationManager } from "@/shared/components/notifications";
 import { Button } from "@/shared/ui/button";
 import { Textarea } from "@/shared/ui/textarea";
@@ -38,6 +38,7 @@ export function SiteForm({
   site?: Site;
 }) {
   const navigate = useNavigate();
+  const dialog = useFormDialog();
   const mutation = useSiteChange(active);
   const descriptionId = useId();
   const form = useForm<SiteFormValues>({
@@ -93,16 +94,26 @@ export function SiteForm({
         submitLabel={site ? "Enregistrer" : "Créer le site"}
         footer={
           <Button
-            variant="outline"
-            className="rounded-full"
+            variant={dialog ? "secondary" : "outline"}
+            className={dialog ? undefined : "rounded-full"}
             disabled={mutation.pending}
-            render={<Link to={cancel} />}
+            {...(dialog
+              ? { onClick: dialog.close }
+              : {
+                  nativeButton: false,
+                  role: "link",
+                  render: <Link to={cancel} />,
+                })}
           >
             Annuler
           </Button>
         }
       >
-        <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+        <div
+          className={
+            dialog ? "grid gap-y-5" : "grid gap-x-6 gap-y-5 sm:grid-cols-2"
+          }
+        >
           <FormField
             name="name"
             label="Nom du site"
@@ -116,8 +127,8 @@ export function SiteForm({
           <FormField name="district" label="Quartier (facultatif)" />
           <FormField
             name="timezone"
-            label="Fuseau horaire"
-            description="Fuseau nommé, par exemple Africa/Douala ou Europe/Paris. Le serveur vérifie sa validité."
+            label="Heure locale"
+            description="Fuseau horaire du site, par exemple Africa/Douala. Il sert à dater les connexions et les ventes."
           />
         </div>
         <FormField

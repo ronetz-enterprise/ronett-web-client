@@ -77,7 +77,7 @@ function view(path: string) {
   return userEvent.setup();
 }
 
-it("liste les sites avec leurs actions de ligne", async () => {
+it("liste les sites : nom vers le détail, lieu dans sa colonne, sans actions de ligne", async () => {
   server.use(
     http.get("*/api/organizations/:org/sites", () =>
       HttpResponse.json([site()]),
@@ -87,14 +87,14 @@ it("liste les sites avec leurs actions de ligne", async () => {
   expect(await screen.findByText("Site de Douala")).toBeTruthy();
   expect(screen.getByText(/1 résultat/)).toBeTruthy();
   expect(
-    screen.getByRole("button", { name: "Modifier Site de Douala" }),
-  ).toBeTruthy();
-  expect(
-    screen.getByRole("button", { name: "Actions pour Site de Douala" }),
-  ).toBeTruthy();
+    screen.getByRole("link", { name: "Site de Douala" }).getAttribute("href"),
+  ).toBe(`/app/${orgA}/sites/${siteId}`);
+  expect(screen.getByRole("columnheader", { name: "Lieu" })).toBeTruthy();
+  // Gérer un site se fait dans son onglet Paramètres, plus depuis chaque ligne.
+  expect(screen.queryByRole("button", { name: /Actions pour/ })).toBeNull();
 });
 
-it("filtre la liste par statut depuis le menu dedie", async () => {
+it("filtre la liste par statut depuis les onglets de statut", async () => {
   server.use(
     http.get("*/api/organizations/:org/sites", () =>
       HttpResponse.json([site()]),
@@ -103,10 +103,7 @@ it("filtre la liste par statut depuis le menu dedie", async () => {
   view(`/app/${orgA}/sites`);
   expect(await screen.findByText("Site de Douala")).toBeTruthy();
   const user = userEvent.setup();
-  await user.click(
-    screen.getByRole("button", { name: /Ajouter un filtre par statut/ }),
-  );
-  await user.click(await screen.findByRole("menuitemradio", { name: "Fermé" }));
+  await user.click(screen.getByRole("button", { name: /^Fermé/ }));
   await waitFor(() => expect(screen.getByText("Aucun résultat")).toBeTruthy());
 });
 
@@ -126,19 +123,6 @@ it("filtre la liste par recherche", async () => {
   await waitFor(() => expect(screen.getByText("Aucun résultat")).toBeTruthy());
 });
 
-it("n'expose pas l'edition en ligne pour un site ferme", async () => {
-  server.use(
-    http.get("*/api/organizations/:org/sites", () =>
-      HttpResponse.json([site({ status: "CLOSED" })]),
-    ),
-  );
-  view(`/app/${orgA}/sites`);
-  await screen.findByText("Site de Douala");
-  expect(
-    screen.queryByRole("button", { name: /Modifier Site de Douala/ }),
-  ).toBeNull();
-});
-
 it("invite a creer un site quand l'organisation n'en a aucun", async () => {
   server.use(
     http.get("*/api/organizations/:org/sites", () => HttpResponse.json([])),
@@ -154,16 +138,25 @@ it("affiche le detail et bascule vers les parametres par onglet", async () => {
     ),
   );
   view(`/app/${orgA}/sites/${siteId}`);
-  expect(await screen.findByText("Emplacement")).toBeTruthy();
-  expect(screen.getByText("Bonabéri")).toBeTruthy();
+  expect(await screen.findByText("Rue Joss")).toBeTruthy();
+  expect(screen.getAllByText(/Bonabéri/).length).toBeGreaterThan(0);
+  // Trois onglets : les routeurs et les accès du site s'ouvrent dans leurs listes filtrées.
+  expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+    "Vue d’ensemble",
+    "Offres",
+    "Paramètres",
+  ]);
   expect(
     screen
-      .getByRole("tab", { name: "Informations" })
+      .getByRole("tab", { name: "Vue d’ensemble" })
       .getAttribute("aria-selected"),
   ).toBe("true");
   const user = userEvent.setup();
   await user.click(screen.getByRole("tab", { name: "Paramètres" }));
-  expect(await screen.findByText("Informations du site")).toBeTruthy();
+  expect(
+    await screen.findByRole("button", { name: "Copier la référence du site" }),
+  ).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Gestion du site" })).toBeTruthy();
   expect(
     screen
       .getByRole("tab", { name: "Paramètres" })

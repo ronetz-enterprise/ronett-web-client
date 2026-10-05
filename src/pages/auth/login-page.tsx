@@ -48,7 +48,7 @@ export default function LoginPage() {
         }
         className="inline-block text-sm underline underline-offset-4"
       >
-        Inscription
+        Pas encore de compte ? Créer un compte
       </Link>
     </>
   );

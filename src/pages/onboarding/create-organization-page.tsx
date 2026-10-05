@@ -1,6 +1,7 @@
 import { Link, Navigate } from "react-router";
 import {
   CreateOrganizationForm,
+  OnboardingSteps,
   useCreationAttempt,
 } from "@/features/onboarding";
 import { SessionMenu } from "@/features/authentication";
@@ -12,10 +13,16 @@ export default function CreateOrganizationPage() {
     return <Navigate replace to={organizationRoutes.creationStatus} />;
   return (
     <>
-      <PageHeader title="Créer une organisation" />
-      <p>Donnez un nom à votre organisation et choisissez sa devise.</p>
+      <OnboardingSteps current={1} />
+      <PageHeader
+        title="Créer une organisation"
+        description="Donnez un nom à votre organisation et choisissez sa devise : elle servira aux prix de vos offres."
+      />
       <CreateOrganizationForm />
-      <Link className="underline" to={organizationRoutes.select}>
+      <Link
+        className="inline-block text-sm underline underline-offset-4"
+        to={organizationRoutes.select}
+      >
         Mes organisations
       </Link>
       <SessionMenu />

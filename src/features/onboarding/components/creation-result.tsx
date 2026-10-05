@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Navigate } from "react-router";
+import { Link } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMembershipAccess, membershipKeys } from "@/features/memberships";
 import { OrganizationAccessNotice } from "@/features/organizations";
@@ -9,13 +9,20 @@ import {
   PageLoading,
 } from "@/shared/components/feedback";
 import { Button } from "@/shared/ui/button";
+import { SuccessMoment } from "@/shared/components/success-moment";
+import { OnboardingSteps } from "./onboarding-steps";
 import { ApiError } from "@/shared/errors/api-error";
 import { organizationRoutes } from "@/shared/auth/organization-routes";
 import { useCreationAttempt } from "../hooks/onboarding-provider";
 export function CreationResult() {
   const attempt = useCreationAttempt();
   if (attempt.status === "created" && attempt.organization)
-    return <ConfirmOwner id={attempt.organization.id} />;
+    return (
+      <ConfirmOwner
+        id={attempt.organization.id}
+        name={attempt.organization.name}
+      />
+    );
   if (attempt.status === "creating")
     return (
       <>
@@ -55,7 +62,7 @@ export function CreationResult() {
     </section>
   );
 }
-function ConfirmOwner({ id }: { id: string }) {
+function ConfirmOwner({ id, name }: { id: string; name?: string }) {
   const query = useMembershipAccess(id);
   const client = useQueryClient();
   useEffect(() => {
@@ -71,5 +78,29 @@ function ConfirmOwner({ id }: { id: string }) {
       />
     );
   if (query.data.role !== "OWNER") return <OrganizationAccessNotice />;
-  return <Navigate replace to={organizationRoutes.dashboard(id)} />;
+  return (
+    <div className="space-y-6">
+      <OnboardingSteps current={2} />
+      <SuccessMoment
+        title="Organisation créée"
+        description={
+          <>
+            {name ? (
+              <strong className="font-medium">{name}</strong>
+            ) : (
+              "Votre organisation"
+            )}{" "}
+            est prête. Prochaine étape : créer votre premier site.
+          </>
+        }
+      />
+      <Button
+        className="w-full"
+        nativeButton={false}
+        render={<Link to={organizationRoutes.dashboard(id)} />}
+      >
+        Ouvrir le tableau de bord
+      </Button>
+    </div>
+  );
 }

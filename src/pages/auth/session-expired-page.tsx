@@ -1,5 +1,6 @@
 import { Link, Navigate, useSearchParams } from "react-router";
 import { PageHeader } from "@/shared/components/feedback";
+import { Button } from "@/shared/ui/button";
 import { safeAuthDestination, useAuth } from "@/features/authentication";
 export default function SessionExpiredPage() {
   const [params] = useSearchParams();
@@ -13,12 +14,17 @@ export default function SessionExpiredPage() {
         title="Session terminée"
         description="La session n’est plus disponible. Reconnectez-vous pour continuer."
       />
-      <Link
-        className="underline"
-        to={"/auth/login?returnTo=" + encodeURIComponent(destination)}
+      <Button
+        className="w-full"
+        nativeButton={false}
+        render={
+          <Link
+            to={"/auth/login?returnTo=" + encodeURIComponent(destination)}
+          />
+        }
       >
         Se reconnecter
-      </Link>
+      </Button>
     </>
   );
 }

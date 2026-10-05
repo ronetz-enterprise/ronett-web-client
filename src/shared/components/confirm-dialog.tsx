@@ -1,30 +1,42 @@
 import { useRef, useState } from "react";
 import { Button } from "@/shared/ui/button";
 import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetClose,
-} from "@/shared/ui/sheet";
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/shared/ui/alert-dialog";
 import { TechnicalError } from "./feedback";
+
+/**
+ * Confirmation d'une action à conséquence, centrée et modale (`role="alertdialog"`).
+ * L'erreur éventuelle s'affiche dans la boîte, qui reste ouverte pour réessayer ;
+ * elle ne se ferme pas pendant l'opération.
+ */
 export function ConfirmDialog({
   trigger,
   title,
   description,
   onConfirm,
+  confirmLabel = "Confirmer",
+  destructive = false,
 }: {
   trigger: string;
   title: string;
   description: string;
   onConfirm: () => Promise<void>;
+  /** Verbe de l'action (« Révoquer », « Annuler le retrait ») plutôt que « Confirmer ». */
+  confirmLabel?: string;
+  destructive?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>();
   const lock = useRef(false);
+
   async function confirm() {
     if (lock.current) return;
     lock.current = true;
@@ -40,38 +52,43 @@ export function ConfirmDialog({
       setPending(false);
     }
   }
+
   return (
-    <Sheet
+    <AlertDialog
       open={open}
       onOpenChange={(value) => {
-        if (!lock.current) {
-          setOpen(value);
-          setError(undefined);
-        }
+        if (lock.current) return;
+        setOpen(value);
+        setError(undefined);
       }}
     >
-      <SheetTrigger render={<Button variant="outline" />}>
+      <AlertDialogTrigger render={<Button variant="outline" />}>
         {trigger}
-      </SheetTrigger>
-      <SheetContent
-        side="bottom"
-        showCloseButton={!pending}
-        className="mx-auto max-w-lg p-6"
-      >
-        <SheetHeader>
-          <SheetTitle>{title}</SheetTitle>
-          <SheetDescription>{description}</SheetDescription>
-        </SheetHeader>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
         {error !== undefined && <TechnicalError error={error} />}
-        <div className="flex gap-2">
-          <SheetClose render={<Button variant="outline" disabled={pending} />}>
+        <AlertDialogFooter>
+          <Button
+            variant="outline"
+            disabled={pending}
+            onClick={() => setOpen(false)}
+          >
             Annuler
-          </SheetClose>
-          <Button disabled={pending} onClick={() => void confirm()}>
-            {pending ? "En cours…" : "Confirmer"}
           </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+          <Button
+            variant={destructive ? "destructive" : "default"}
+            disabled={pending}
+            aria-busy={pending}
+            onClick={() => void confirm()}
+          >
+            {pending ? "En cours…" : confirmLabel}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

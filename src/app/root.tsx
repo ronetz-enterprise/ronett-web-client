@@ -8,6 +8,7 @@ import {
 } from "react-router";
 import type { Route } from "./+types/root";
 import { AppProviders } from "./providers/app-providers";
+import { THEME_STORAGE_KEY } from "./providers/theme-provider";
 import { AppLoading } from "@/shared/components/feedback";
 import NotFoundPage from "@/pages/public/not-found-page";
 import ForbiddenPage from "@/pages/public/forbidden-page";
@@ -19,12 +20,15 @@ export function meta() {
     { name: "description", content: "Votre espace de gestion Wi-Fi." },
   ];
 }
+/** Applique le thème avant le premier rendu, pour éviter un éclair clair en mode sombre. */
+const themeScript = `try{var p=localStorage.getItem("${THEME_STORAGE_KEY}");var d=p==="dark"||(p!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light"}catch(e){}`;
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Meta />
         <Links />
       </head>

@@ -1,103 +1,82 @@
+import { useFormDialog } from "@/shared/components/form-dialog-context";
 import type { ReactNode } from "react";
-import { Link } from "react-router";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Edit02Icon } from "@hugeicons/core-free-icons";
 import type { Membership } from "@/features/memberships";
 import { PageLoading } from "@/shared/components/feedback";
+import { DetailTabs } from "@/shared/components/detail-tabs";
+import {
+  ReadOnlyValue,
+  SettingField,
+  SettingsBody,
+  SettingsSection,
+} from "@/shared/components/settings-layout";
 import { ApiError } from "@/shared/errors/api-error";
-import { Button } from "@/shared/ui/button";
+import { formatDate } from "@/shared/utils/format";
 import { Alert, AlertTitle, AlertDescription } from "@/shared/ui/alert";
-import { cn } from "cn";
 import { siteCapabilities, siteRoutes } from "../model/site";
 import { useSite } from "../queries/sites";
 import {
   SiteBreadcrumb,
-  SiteDetailTabs,
   SiteFailure,
   SitePageHeader,
   SiteStatus,
 } from "./site-shared";
 import { SiteForm } from "./site-form";
-import { SiteActions } from "./site-actions";
-
-/** Panneau plat : titre sur fond gris, contenu sur fond blanc, trait 1px. */
-function SitePanel({
-  title,
-  children,
-  className,
-}: {
-  title: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <section
-      className={cn(
-        "min-w-0 overflow-hidden rounded-xl border bg-card",
-        className,
-      )}
-    >
-      <h2 className="border-b bg-muted/60 px-5 py-3 font-heading text-sm font-semibold">
-        {title}
-      </h2>
-      <div className="px-5 py-4">{children}</div>
-    </section>
-  );
-}
-
-/** Paire libelle/valeur empilee, alignee sur les blocs de la console. */
-function SiteField({
-  label,
-  value,
-  className,
-}: {
-  label: string;
-  value: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn("min-w-0 space-y-1", className)}>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="text-sm break-words whitespace-pre-wrap">{value}</dd>
-    </div>
-  );
-}
+import { SiteManagement } from "./site-actions";
+import { SitePortalSection } from "./site-portal";
 
 export function SiteCreate({ active }: { active: Membership }) {
+  const dialog = useFormDialog();
   if (!siteCapabilities(active).canCreateSite)
     return <SiteFailure error={new ApiError("http", 403)} />;
   return (
-    <div className="max-w-3xl space-y-6">
-      <SitePageHeader
-        title="Créer un site"
-        description={`Ce site sera rattaché à ${active.organizationName}.`}
-        breadcrumb={
-          <SiteBreadcrumb
-            organizationId={active.organizationId}
-            current="Nouveau site"
-          />
-        }
-      />
-      <SitePanel title="Informations du site">
-        <SiteForm active={active} />
-      </SitePanel>
+    <div className={dialog ? "space-y-6" : "max-w-2xl space-y-6"}>
+      {!dialog && (
+        <SitePageHeader
+          title="Créer un site"
+          description={`Ce site sera rattaché à ${active.organizationName}.`}
+          breadcrumb={
+            <SiteBreadcrumb
+              organizationId={active.organizationId}
+              current="Nouveau site"
+            />
+          }
+        />
+      )}
+      <SiteForm active={active} />
     </div>
   );
 }
 
+export type SiteTab = "overview" | "offers" | "settings";
+
+/**
+ * Espace d'un site, au gabarit des pages de détail : en-tête avec onglets *Vue d'ensemble ·
+ * Offres · Paramètres* pilotés par l'URL. Les routeurs et les accès du site ne sont pas des
+ * onglets : la vue d'ensemble renvoie vers les listes globales filtrées sur le site (`metrics`,
+ * composé par la page). `summary` s'affiche en tête de la vue d'ensemble ; l'onglet Offres est
+ * fourni par la page (`children`).
+ */
 export function SiteDetails({
   active,
   siteId,
   editing = false,
+  tab = editing ? "settings" : "overview",
+  summary,
+  metrics,
+  children,
 }: {
   active: Membership;
   siteId: string;
   editing?: boolean;
+  tab?: SiteTab;
+  summary?: ReactNode;
+  metrics?: ReactNode;
+  children?: ReactNode;
 }) {
   const query = useSite(active, siteId);
   if (!siteCapabilities(active).canViewSites)
     return <SiteFailure error={new ApiError("http", 403)} />;
-  if (query.isPending) return <PageLoading />;
+  if (query.isPending) return <PageLoading variant="detail" />;
   const transientFailure =
     query.error instanceof ApiError &&
     (["network", "timeout", "aborted"].includes(query.error.kind) ||
@@ -109,165 +88,154 @@ export function SiteDetails({
     );
   const site = query.data;
   const caps = siteCapabilities(active, site);
+  const org = active.organizationId;
   return (
-    <div className="max-w-5xl space-y-5">
+    <>
       <SitePageHeader
-        title={editing ? "Paramètres du site" : site.name}
+        title={site.name}
         status={<SiteStatus site={site} />}
-        breadcrumb={
-          <SiteBreadcrumb
-            organizationId={active.organizationId}
-            site={editing ? site : undefined}
-            current={editing ? "Paramètres" : "Détail du site"}
+        breadcrumb={<SiteBreadcrumb organizationId={org} current={site.name} />}
+        tabs={
+          <DetailTabs
+            label={`Sections du site ${site.name}`}
+            tabs={[
+              { label: "Vue d’ensemble", to: siteRoutes.detail(org, site.id) },
+              { label: "Offres", to: siteRoutes.offers(org, site.id) },
+              { label: "Paramètres", to: siteRoutes.settings(org, site.id) },
+            ]}
           />
-        }
-        description={
-          editing
-            ? site.name
-            : `${site.city}${site.district ? " · " + site.district : ""}`
-        }
-        actions={
-          !editing && (
-            <>
-              {caps.canEditSite && (
-                <Button
-                  render={
-                    <Link
-                      to={siteRoutes.settings(active.organizationId, site.id)}
-                    />
-                  }
-                >
-                  <HugeiconsIcon
-                    icon={Edit02Icon}
-                    strokeWidth={2}
-                    data-icon="inline-start"
-                  />
-                  Modifier
-                </Button>
-              )}
-              <SiteActions active={active} site={site} />
-            </>
-          )
         }
       />
-      {query.isError && (
-        <SiteFailure error={query.error} retry={() => void query.refetch()} />
-      )}
-      {query.isFetching && (
-        <p role="status" className="text-sm text-muted-foreground">
-          Actualisation du site…
-        </p>
-      )}
-      {editing ? (
-        caps.canEditSite ? (
-          <div className="space-y-5">
-            <SiteDetailTabs
-              organizationId={active.organizationId}
-              site={site}
-              editing
-              canEdit={caps.canEditSite}
+      {(query.isError || site.status !== "ACTIVE") && (
+        <div className="max-w-3xl space-y-3">
+          {query.isError && (
+            <SiteFailure
+              error={query.error}
+              retry={() => void query.refetch()}
             />
-            <SitePanel title="Informations du site">
-              <SiteForm key={site.id} active={active} site={site} />
-            </SitePanel>
-          </div>
-        ) : (
-          <Alert>
-            <AlertTitle>Modification indisponible</AlertTitle>
-            <AlertDescription>
-              Ce site est fermé ou vos droits ne permettent plus de le modifier.{" "}
-              <Link
-                className="underline underline-offset-4"
-                to={siteRoutes.detail(active.organizationId, site.id)}
-              >
-                Revenir au détail
-              </Link>
-            </AlertDescription>
-          </Alert>
-        )
-      ) : (
-        <>
-          <SiteDetailTabs
-            organizationId={active.organizationId}
-            site={site}
-            editing={false}
-            canEdit={caps.canEditSite}
-          />
+          )}
           {site.status !== "ACTIVE" && (
             <Alert>
               <AlertTitle>
-                {site.status === "CLOSED"
-                  ? "Site fermé définitivement"
-                  : "Site suspendu"}
+                {site.status === "CLOSED" ? "Site fermé" : "Site suspendu"}
               </AlertTitle>
               <AlertDescription>
                 {site.status === "CLOSED"
-                  ? "Ce site reste consultable, mais ne peut plus être modifié ou réactivé."
-                  : "Les opérations exigeant un site actif sont indisponibles jusqu’à sa réactivation."}
+                  ? "Ce site reste consultable, mais ne peut plus être modifié ni réactivé."
+                  : "Son portail ne vend plus d’accès. Vous pouvez le réactiver depuis l’onglet Paramètres."}
               </AlertDescription>
             </Alert>
           )}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <SitePanel title="Emplacement">
-              <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-                <SiteField
-                  label="Ville"
-                  value={site.city || "Non renseignée"}
-                />
-                <SiteField
-                  label="Quartier"
-                  value={site.district || "Non renseigné"}
-                />
-                <SiteField
-                  label="Adresse"
-                  value={site.addressDetails || "Non renseignée"}
-                  className="sm:col-span-2"
-                />
-                <SiteField
-                  label="Fuseau horaire"
-                  value={site.timezone}
-                  className="sm:col-span-2"
-                />
-              </dl>
-            </SitePanel>
-            <SitePanel title="Informations complémentaires">
-              <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-                <SiteField
-                  label="Description"
-                  value={site.description || "Non renseignée"}
-                  className="sm:col-span-2"
-                />
-                <SiteField
-                  label="Créé le"
-                  value={new Date(site.createdAt).toLocaleString("fr-FR")}
-                />
-                <SiteField
-                  label="Dernière modification"
-                  value={new Date(site.updatedAt).toLocaleString("fr-FR")}
-                />
-                <SiteField
-                  label="Identifiant du site"
-                  value={site.id}
-                  className="sm:col-span-2"
-                />
-              </dl>
-            </SitePanel>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              className="rounded-full"
-              disabled={query.isFetching}
-              onClick={() => void query.refetch()}
-            >
-              Actualiser le site
-            </Button>
-            <span aria-live="polite" className="sr-only">
-              {query.isFetching ? "Actualisation en cours" : ""}
-            </span>
-          </div>
-        </>
+        </div>
       )}
-    </div>
+      {query.isFetching && (
+        <p role="status" className="sr-only">
+          Actualisation du site…
+        </p>
+      )}
+      {tab === "settings" ? (
+        <SettingsBody>
+          {caps.canEditSite ? (
+            <SettingsSection
+              id="details"
+              title="Détails"
+              description="Nom, adresse et description du site."
+            >
+              <div className="max-w-xl">
+                <SiteForm key={site.id} active={active} site={site} />
+              </div>
+            </SettingsSection>
+          ) : (
+            <SettingsSection id="details" title="Détails">
+              <p className="text-sm text-muted-foreground">
+                Ce site est fermé ou vos droits ne permettent pas de le
+                modifier.
+              </p>
+            </SettingsSection>
+          )}
+          <SettingsSection
+            id="references"
+            title="Références pour le support"
+            description="À communiquer au support en cas de problème."
+          >
+            <div className="space-y-6">
+              <SettingField label="Référence du site">
+                <ReadOnlyValue
+                  mono
+                  copy={{ value: site.id, label: "la référence du site" }}
+                >
+                  {site.id}
+                </ReadOnlyValue>
+              </SettingField>
+              <div className="grid max-w-sm gap-6 sm:grid-cols-2">
+                <SettingField label="Créé le">
+                  <ReadOnlyValue>{formatDate(site.createdAt)}</ReadOnlyValue>
+                </SettingField>
+                <SettingField label="Modifié le">
+                  <ReadOnlyValue>{formatDate(site.updatedAt)}</ReadOnlyValue>
+                </SettingField>
+              </div>
+            </div>
+          </SettingsSection>
+          <SiteManagement active={active} site={site} />
+        </SettingsBody>
+      ) : tab === "overview" ? (
+        <>
+          {summary && <div className="max-w-3xl">{summary}</div>}
+          <SettingsBody>
+            {metrics && (
+              <SettingsSection
+                id="en-bref"
+                title="En bref"
+                description="L’activité de ce site en ce moment."
+              >
+                {metrics}
+              </SettingsSection>
+            )}
+            <SitePortalSection site={site} />
+            <SettingsSection
+              id="adresse"
+              title="Adresse"
+              description="Où se trouve le site."
+            >
+              <div className="space-y-6">
+                <div className="grid max-w-xl gap-6 sm:grid-cols-2">
+                  <SettingField label="Ville">
+                    <ReadOnlyValue>
+                      {site.city || "Non renseignée"}
+                    </ReadOnlyValue>
+                  </SettingField>
+                  <SettingField label="Quartier">
+                    <ReadOnlyValue>
+                      {site.district || "Non renseigné"}
+                    </ReadOnlyValue>
+                  </SettingField>
+                </div>
+                <SettingField label="Précisions d’adresse">
+                  <ReadOnlyValue>
+                    {site.addressDetails || "Non renseignées"}
+                  </ReadOnlyValue>
+                </SettingField>
+                <SettingField label="Description">
+                  <ReadOnlyValue>
+                    <span className="whitespace-pre-wrap">
+                      {site.description || "Non renseignée"}
+                    </span>
+                  </ReadOnlyValue>
+                </SettingField>
+                <SettingField
+                  label="Heure locale"
+                  description="Sert à dater les connexions et les ventes du site."
+                >
+                  <ReadOnlyValue>{site.timezone}</ReadOnlyValue>
+                </SettingField>
+              </div>
+            </SettingsSection>
+          </SettingsBody>
+        </>
+      ) : (
+        children
+      )}
+    </>
   );
 }

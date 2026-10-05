@@ -10,6 +10,25 @@ it("reads JSON, 204 and non-JSON success", async () => {
   await expect(request("/__mocks/empty")).resolves.toBeUndefined();
   await expect(request("/__mocks/text")).resolves.toBe("résultat technique");
 });
+it("returns a file body as Blob and keeps Problem Details for errors", async () => {
+  server.use(
+    http.get("*/file", () =>
+      HttpResponse.text("/system identity set name=demo", {
+        headers: { "Content-Type": "text/plain" },
+      }),
+    ),
+  );
+  const blob = await request<Blob>("/file", { responseType: "blob" });
+  expect(blob.type).toContain("text/plain");
+  await expect(blob.text()).resolves.toBe("/system identity set name=demo");
+  await expect(
+    request("/__mocks/409", { responseType: "blob" }),
+  ).rejects.toMatchObject({
+    kind: "http",
+    status: 409,
+    problem: { title: "Request failed" },
+  });
+});
 it.each([401, 403, 404, 409, 422, 429, 500, 502, 503])(
   "normalizes HTTP %i with the original correlation",
   async (status) => {

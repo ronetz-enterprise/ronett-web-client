@@ -1,11 +1,10 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { FormField, ValidatedForm } from "@/shared/components/form";
 import {
-  FormField,
-  ValidatedForm,
   zodResolver,
   applyApiFieldErrors,
-} from "@/shared/components/form";
+} from "@/shared/components/form-utils";
 import { CorrelationIdDisplay } from "@/shared/components/feedback";
 import { ApiError, toUserMessage } from "@/shared/errors/api-error";
 import { useHydrated } from "@/shared/hooks/use-hydrated";

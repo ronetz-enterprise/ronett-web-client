@@ -53,7 +53,7 @@ export function NavUser({
             </div>
             <HugeiconsIcon
               icon={UnfoldMoreIcon}
-              strokeWidth={2}
+              strokeWidth={1.75}
               className="ml-auto size-4"
             />
           </DropdownMenuTrigger>
@@ -80,28 +80,28 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} />
+                <HugeiconsIcon icon={SparklesIcon} strokeWidth={1.75} />
                 Upgrade to Pro
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <HugeiconsIcon icon={CheckmarkBadgeIcon} strokeWidth={2} />
+                <HugeiconsIcon icon={CheckmarkBadgeIcon} strokeWidth={1.75} />
                 Account
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <HugeiconsIcon icon={CreditCardIcon} strokeWidth={2} />
+                <HugeiconsIcon icon={CreditCardIcon} strokeWidth={1.75} />
                 Billing
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <HugeiconsIcon icon={NotificationIcon} strokeWidth={2} />
+                <HugeiconsIcon icon={NotificationIcon} strokeWidth={1.75} />
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <HugeiconsIcon icon={LogoutIcon} strokeWidth={2} />
+              <HugeiconsIcon icon={LogoutIcon} strokeWidth={1.75} />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

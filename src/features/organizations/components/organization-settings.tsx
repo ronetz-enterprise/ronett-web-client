@@ -11,16 +11,14 @@ import {
   ContentSkeleton,
   QueryFailure,
 } from "@/shared/components/query-feedback";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/shared/ui/card";
-import { StatusBadge } from "@/shared/components/feedback";
+import { StatusDot } from "@/shared/components/status-dot";
 import { businessStatusTone } from "@/shared/components/status";
-import { Alert, AlertTitle, AlertDescription } from "@/shared/ui/alert";
+import { RelativeTime } from "@/shared/components/relative-time";
+import {
+  ReadOnlyValue,
+  SettingField,
+  SettingsSection,
+} from "@/shared/components/settings-layout";
 import { organizationSchema } from "../types/organization";
 export function OrganizationSettings({ active }: { active: Membership }) {
   const { request } = useAuth();
@@ -58,58 +56,71 @@ export function OrganizationSettings({ active }: { active: Membership }) {
     );
   const organization = query.data;
   return (
-    <div className="max-w-4xl space-y-6">
-      <Card className="text-sm">
-        <CardHeader>
-          <CardTitle>
-            <h2>Informations générales</h2>
-          </CardTitle>
-          <CardDescription>Organisation active vérifiée.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-muted-foreground">Nom</dt>
-              <dd className="break-words">{organization.name}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Devise</dt>
-              <dd>{organization.currency}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Statut</dt>
-              <dd>
-                <StatusBadge
-                  label={organization.status}
-                  tone={businessStatusTone[organization.status] ?? "neutral"}
-                />
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Identifiant</dt>
-              <dd className="break-all">{organization.id}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Créée le</dt>
-              <dd>
-                {new Date(organization.createdAt).toLocaleDateString("fr-FR")}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Mise à jour le</dt>
-              <dd>
-                {new Date(organization.updatedAt).toLocaleDateString("fr-FR")}
-              </dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
-      <Alert>
-        <AlertTitle>Consultation uniquement</AlertTitle>
-        <AlertDescription>
-          La modification du nom et de la devise n’est pas encore disponible.
-        </AlertDescription>
-      </Alert>
+    <div className="max-w-3xl space-y-10">
+      <SettingsSection title="Détails">
+        <div className="space-y-6">
+          <SettingField
+            label="Nom de l’organisation"
+            description="Nom de votre organisation dans Ronetz."
+          >
+            <ReadOnlyValue>{organization.name}</ReadOnlyValue>
+          </SettingField>
+          <SettingField
+            label="Identifiant de l’organisation"
+            description="Référence à communiquer au support."
+          >
+            <ReadOnlyValue
+              mono
+              copy={{
+                value: organization.id,
+                label: "l’identifiant de l’organisation",
+              }}
+            >
+              {organization.id}
+            </ReadOnlyValue>
+          </SettingField>
+          <SettingField
+            label="Devise"
+            description="Utilisée pour les prix des offres et les retraits."
+          >
+            <ReadOnlyValue>{organization.currency}</ReadOnlyValue>
+          </SettingField>
+          <SettingField
+            label="Statut"
+            description="État de l’organisation dans Ronetz."
+          >
+            <StatusDot
+              label={statusLabels[organization.status] ?? organization.status}
+              tone={businessStatusTone[organization.status] ?? "neutral"}
+            />
+          </SettingField>
+          <div className="grid max-w-sm gap-6 sm:grid-cols-2">
+            <SettingField label="Créée">
+              <ReadOnlyValue>
+                <RelativeTime value={organization.createdAt} />
+              </ReadOnlyValue>
+            </SettingField>
+            <SettingField label="Dernière modification">
+              <ReadOnlyValue>
+                <RelativeTime value={organization.updatedAt} />
+              </ReadOnlyValue>
+            </SettingField>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            <strong className="font-medium text-foreground">
+              Consultation uniquement
+            </strong>{" "}
+            : la modification du nom et de la devise n’est pas encore
+            disponible.
+          </p>
+        </div>
+      </SettingsSection>
     </div>
   );
 }
+
+const statusLabels: Record<string, string> = {
+  ACTIVE: "Active",
+  SUSPENDED: "Suspendue",
+  CLOSED: "Fermée",
+};

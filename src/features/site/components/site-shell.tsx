@@ -1,19 +1,17 @@
 import type { ComponentProps } from "react";
 import { cn } from "cn";
-import "../theme/sites-theme.css";
 
 /**
- * Racine de portee du theme experimental du module sites.
- *
- * A poser sur la page, et non sur le composant de feature, pour que le theme
- * couvre toute la surface du module (listes, detail, formulaire, routeur) sans
- * deborder sur le reste de l'application.
+ * Conteneur des pages du module sites. Il n'applique aucun thème propre : les
+ * sites héritent du thème global, comme toute l'application (budget couleur,
+ * docs/frontend-refonte-plan.md §2).
  */
 export function SiteShell({ className, ...props }: ComponentProps<"div">) {
+  // Même espacement que la zone de contenu : l'en-tête et le contenu des pages sont frères ici.
   return (
     <div
       data-slot="sites-shell"
-      className={cn("sites-shell", className)}
+      className={cn("space-y-6", className)}
       {...props}
     />
   );

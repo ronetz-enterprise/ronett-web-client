@@ -1,93 +1,93 @@
+import { FieldHeader } from "@/shared/components/field-header";
+import {
+  dialogFooterClass,
+  useFormDialog,
+} from "@/shared/components/form-dialog-context";
+import { UnsavedChangesGuard } from "./unsaved-changes";
+import { useOnline } from "@/shared/hooks/use-online";
 import { useEffect, useId, useRef, type FormEvent } from "react";
-import { z } from "zod";
 import {
   FormProvider,
   useFormContext,
-  type FieldErrors,
   type FieldValues,
-  type Path,
-  type Resolver,
   type SubmitHandler,
   type UseFormReturn,
 } from "react-hook-form";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
 import { cn } from "cn";
-import {
-  ApiError,
-  extractFieldErrors,
-  toUserMessage,
-} from "@/shared/errors/api-error";
+import { toUserMessage } from "@/shared/errors/api-error";
 
-// Scoped to flat technical forms. Nested schemas should use an explicit adapter.
-export function zodResolver<T extends FieldValues>(
-  schema: z.ZodType<T, T>,
-): Resolver<T> {
-  return async (values) => {
-    const result = await schema.safeParseAsync(values);
-    if (result.success) return { values: result.data, errors: {} };
-    const errors: Record<string, { type: string; message: string }> = {};
-    for (const issue of result.error.issues) {
-      const name = issue.path.length === 1 ? String(issue.path[0]) : "root";
-      errors[name] ??= { type: "validation", message: issue.message };
-    }
-    return { values: {}, errors: errors as FieldErrors<T> };
-  };
-}
-export function applyApiFieldErrors<T extends FieldValues>(
-  error: unknown,
-  form: UseFormReturn<T>,
-  allowedFields: readonly Path<T>[],
-) {
-  if (!(error instanceof ApiError)) return false;
-  const fields = extractFieldErrors(error.problem);
-  let first = true;
-  for (const field of allowedFields) {
-    if (fields[field]) {
-      // Raw server messages remain diagnostic data; only safe UX copy is rendered.
-      form.setError(
-        field,
-        { type: "server", message: "Vérifiez ce champ." },
-        { shouldFocus: first },
-      );
-      first = false;
-    }
-  }
-  return !first;
-}
 export function FormField({
   name,
   label,
   description,
   type = "text",
   autoComplete,
+  endAdornment,
+  placeholder,
+  after,
 }: {
+  /** Contrôles placés juste après le champ (ex. : valider / annuler la modification). */
+  after?: React.ReactNode;
   name: string;
+  placeholder?: string;
   label: string;
   description?: string;
   autoComplete?: string;
   type?: React.ComponentProps<typeof Input>["type"];
+  /** Contrôle placé à l'intérieur du champ, à droite (ex. : afficher le mot de passe). */
+  endAdornment?: React.ReactNode;
 }) {
   const id = useId();
   const { register, getFieldState, formState } = useFormContext();
   const { error } = getFieldState(name, formState);
+  const dialog = useFormDialog();
   return (
     <div className="space-y-2">
-      <label htmlFor={id} className="text-sm font-medium">
-        {label}
-      </label>
-      <Input
-        id={id}
-        type={type}
-        autoComplete={autoComplete}
-        {...register(name)}
-        aria-invalid={!!error}
-        aria-describedby={`${id}-description ${id}-error`}
-      />
-      <p id={`${id}-description`} className="text-sm text-muted-foreground">
-        {description}
-      </p>
+      {dialog ? (
+        <FieldHeader
+          htmlFor={id}
+          label={label}
+          description={description}
+          descriptionId={`${id}-description`}
+        />
+      ) : (
+        <label htmlFor={id} className="text-sm font-medium">
+          {label}
+        </label>
+      )}
+      <div className="flex items-center gap-2">
+        <div className="relative min-w-0 flex-1">
+          <Input
+            id={id}
+            type={type}
+            autoComplete={autoComplete}
+            placeholder={placeholder}
+            {...register(name)}
+            aria-invalid={!!error}
+            aria-describedby={`${id}-description ${id}-error`}
+            className={cn(endAdornment && "pr-10")}
+          />
+          {endAdornment && (
+            <div className="absolute inset-y-0 right-1 flex items-center">
+              {endAdornment}
+            </div>
+          )}
+        </div>
+        {after}
+      </div>
+      {!dialog && (
+        <p
+          id={`${id}-description`}
+          className="text-sm text-muted-foreground empty:hidden"
+        >
+          {description}
+        </p>
+      )}
       <p
         id={`${id}-error`}
         aria-live="polite"
@@ -105,7 +105,11 @@ export function ValidatedForm<T extends FieldValues>({
   submitLabel = "Valider",
   disabled = false,
   footer,
+  guardUnsavedChanges = true,
+  hideActions = false,
 }: {
+  /** Pas de bouton global : chaque champ se valide séparément (modification en place). */
+  hideActions?: boolean;
   form: UseFormReturn<T>;
   onSubmit: SubmitHandler<T>;
   children: React.ReactNode;
@@ -113,7 +117,10 @@ export function ValidatedForm<T extends FieldValues>({
   disabled?: boolean;
   /** Actions secondaires alignees a gauche du bouton de soumission. */
   footer?: React.ReactNode;
+  /** Demande confirmation avant de quitter une saisie modifiée (désactiver pour connexion/inscription). */
+  guardUnsavedChanges?: boolean;
 }) {
+  const online = useOnline();
   const lock = useRef(false);
   const element = useRef<HTMLFormElement>(null);
   const { isSubmitting, submitCount, errors } = form.formState;
@@ -136,8 +143,14 @@ export function ValidatedForm<T extends FieldValues>({
       lock.current = false;
     }
   }
+  const dialog = useFormDialog();
   return (
     <FormProvider {...form}>
+      <UnsavedChangesGuard
+        when={guardUnsavedChanges && form.formState.isDirty}
+        // Pendant l'envoi, la redirection qui suit un succès ne doit pas être bloquée.
+        bypass={() => lock.current}
+      />
       <form
         ref={element}
         method="post"
@@ -147,18 +160,46 @@ export function ValidatedForm<T extends FieldValues>({
       >
         <fieldset
           disabled={disabled || form.formState.isSubmitting}
-          className="space-y-4"
+          className={dialog ? "space-y-6" : "space-y-4"}
         >
           {children}
+          {form.formState.errors.root?.message && (
+            <Alert
+              variant="destructive"
+              className="border-0 bg-danger px-3 py-2.5 text-sm text-danger-foreground *:data-[slot=alert-description]:text-danger-foreground"
+            >
+              <HugeiconsIcon icon={AlertCircleIcon} strokeWidth={1.75} />
+              <AlertDescription className="text-sm">
+                {form.formState.errors.root.message}
+              </AlertDescription>
+            </Alert>
+          )}
           <div
             className={cn(
               "flex flex-wrap items-center gap-2",
               footer && "justify-end",
+              dialog && dialogFooterClass,
+              hideActions && "hidden",
             )}
           >
-            {footer}
+            {footer ??
+              (dialog && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={dialog.close}
+                >
+                  Annuler
+                </Button>
+              ))}
+            {!online && (
+              <p role="status" className="text-sm text-muted-foreground">
+                Hors ligne : l’envoi reprendra au retour de la connexion.
+              </p>
+            )}
             <Button
               type="submit"
+              disabled={!online}
               className="relative min-h-10"
               aria-busy={isSubmitting}
             >
@@ -168,7 +209,7 @@ export function ValidatedForm<T extends FieldValues>({
                 aria-hidden="true"
                 className={
                   isSubmitting
-                    ? "size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+                    ? "size-4 animate-spin rounded-full border-2 border-current border-r-transparent motion-reduce:animate-none"
                     : "size-4"
                 }
               />
@@ -176,13 +217,6 @@ export function ValidatedForm<T extends FieldValues>({
             </Button>
           </div>
         </fieldset>
-        {form.formState.errors.root?.message && (
-          <Alert variant="destructive" className="mt-4">
-            <AlertDescription>
-              {form.formState.errors.root.message}
-            </AlertDescription>
-          </Alert>
-        )}
       </form>
     </FormProvider>
   );

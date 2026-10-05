@@ -1,32 +1,11 @@
-import { SummaryCard } from "@/shared/components/page-patterns";
-import { businessStatusTone } from "@/shared/components/status";
-import { PageHeader, StatusBadge } from "@/shared/components/feedback";
+import { Navigate } from "react-router";
 import { useActiveOrganization } from "@/features/organizations";
+import { organizationRoutes } from "@/shared/auth/organization-routes";
+
+/** Ancienne page « Organisation » : son contenu vit dans Paramètres › Général. */
 export default function OrganizationPage() {
-  const organization = useActiveOrganization();
+  const active = useActiveOrganization();
   return (
-    <>
-      <PageHeader
-        title="Organisation"
-        description={organization.organizationName}
-      />
-      <SummaryCard title="Contexte de l’organisation" className="max-w-4xl">
-        <div className="space-y-4">
-          <p className="break-all text-sm">
-            Identifiant : {organization.organizationId}
-          </p>
-          <p>Rôle : {organization.role}</p>
-          <StatusBadge
-            label={organization.organizationStatus}
-            tone={
-              businessStatusTone[organization.organizationStatus] ?? "neutral"
-            }
-          />
-          <p>
-            Les paramètres détaillés seront disponibles dans un prochain sprint.
-          </p>
-        </div>
-      </SummaryCard>
-    </>
+    <Navigate replace to={organizationRoutes.settings(active.organizationId)} />
   );
 }

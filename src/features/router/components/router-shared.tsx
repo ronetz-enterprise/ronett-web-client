@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { StatusBadge } from "@/shared/components/feedback";
+import { StatusDot } from "@/shared/components/status-dot";
 import { QueryFailure } from "@/shared/components/query-feedback";
 import { ApiError } from "@/shared/errors/api-error";
 import { Alert, AlertTitle, AlertDescription } from "@/shared/ui/alert";
@@ -68,14 +69,31 @@ export function RouterStatus({
     />
   );
 }
+/** Connectivité en point de statut ; « en ligne » porte le halo vivant. */
+export function RouterConnectivity({ router }: { router: Router }) {
+  return (
+    <StatusDot
+      label={connectivityLabels[router.connectivityStatus]}
+      tone={
+        router.connectivityStatus === "ONLINE"
+          ? "success"
+          : router.connectivityStatus === "OFFLINE"
+            ? "warning"
+            : "neutral"
+      }
+      live={
+        router.connectivityStatus === "ONLINE" &&
+        router.lifecycleStatus === "ACTIVE"
+      }
+    />
+  );
+}
 export function RouterBreadcrumb({
   org,
   current,
-  router,
 }: {
   org: string;
   current: string;
-  router?: Router;
 }) {
   return (
     <Breadcrumb aria-label="Fil d’Ariane des routeurs">
@@ -85,18 +103,6 @@ export function RouterBreadcrumb({
             Routeurs
           </BreadcrumbLink>
         </BreadcrumbItem>
-        {router && (
-          <>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                render={<Link to={routerRoutes.detail(org, router.id)} />}
-              >
-                {router.name}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-          </>
-        )}
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbPage role={undefined} aria-disabled={undefined}>
@@ -116,9 +122,7 @@ export function LastObservation({
 }) {
   if (!at)
     return (
-      <span className="text-sm text-muted-foreground">
-        Aucune observation reçue
-      </span>
+      <span className="text-sm text-muted-foreground">Aucun signal reçu</span>
     );
   const date = new Date(at),
     seconds = Math.round((date.getTime() - Date.now()) / 1000);
@@ -149,7 +153,7 @@ export function LastObservation({
             className="text-left text-sm underline decoration-dotted underline-offset-4"
           />
         }
-        aria-label={`Dernière observation : ${exact}`}
+        aria-label={`Dernier signal : ${exact}`}
       >
         <time dateTime={at}>
           {new Intl.RelativeTimeFormat("fr", { numeric: "auto" }).format(
@@ -173,24 +177,28 @@ export const transientRouterError = (error: unknown) =>
 export function RouterFailure({
   error,
   retry,
+  creating = false,
 }: {
   error: unknown;
   retry?: () => void;
+  /** Ajout d'un routeur : pas d'idempotence, renvoyer pourrait créer un doublon. */
+  creating?: boolean;
 }) {
   return (
     <div className="space-y-3">
       <QueryFailure error={error} retry={retry} />
       {error instanceof ApiError && error.status === 409 && (
         <p className="text-sm text-muted-foreground">
-          Une commande peut déjà être en attente ou l’état du routeur ou du site
-          a changé. Consultez l’état actuel avant une nouvelle intention.
+          {creating
+            ? "Ce site n’est plus actif. Choisissez un autre site."
+            : "Une autre demande est déjà en cours, ou l’état du routeur a changé. Actualisez la page avant de réessayer."}
         </p>
       )}
       {transientRouterError(error) && (
         <p className="text-sm text-muted-foreground">
-          Le résultat technique n’est pas confirmé. Une indisponibilité ne
-          signifie pas que la commande a échoué. Si la réponse d’une commande a
-          été perdue, rejouez la même demande.
+          {creating
+            ? "Le service n’a pas répondu. Le routeur a peut-être été ajouté : vérifiez la liste des routeurs avant de réessayer."
+            : "Le service n’a pas répondu. Votre demande a peut-être été prise en compte : actualisez la page avant de la renvoyer."}
         </p>
       )}
     </div>
@@ -199,12 +207,13 @@ export function RouterFailure({
 export function InfrastructureNotice() {
   return (
     <Alert>
-      <AlertTitle>Exécution réseau non raccordée</AlertTitle>
+      <AlertTitle>
+        Mise en service automatique en cours de déploiement
+      </AlertTitle>
       <AlertDescription>
-        Le backend peut enregistrer les demandes. L’intégration réseau
-        disponible dans cette version ne permet pas encore de garantir leur
-        exécution sur l’équipement. Une demande acceptée ne confirme ni une
-        installation ni une connexion.
+        Ronetz enregistre vos demandes, mais leur exécution automatique sur le
+        routeur n’est pas encore active dans cette version. Si une étape reste
+        bloquée, contactez le support en indiquant l’identifiant du routeur.
       </AlertDescription>
     </Alert>
   );

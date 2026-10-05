@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ViewIcon, ViewOffIcon } from "@hugeicons/core-free-icons";
 import { FormField } from "./form";
-import { Button } from "@/shared/ui/button";
 export function PasswordField({
   name = "password",
   label = "Mot de passe",
@@ -12,21 +13,27 @@ export function PasswordField({
 }) {
   const [visible, setVisible] = useState(false);
   return (
-    <div className="space-y-2">
-      <FormField
-        name={name}
-        label={label}
-        type={visible ? "text" : "password"}
-        autoComplete={autoComplete}
-      />
-      <Button
-        type="button"
-        variant="outline"
-        aria-pressed={visible}
-        onClick={() => setVisible(!visible)}
-      >
-        {visible ? "Masquer" : "Afficher"} {label.toLowerCase()}
-      </Button>
-    </div>
+    <FormField
+      name={name}
+      label={label}
+      type={visible ? "text" : "password"}
+      autoComplete={autoComplete}
+      endAdornment={
+        <button
+          type="button"
+          aria-pressed={visible}
+          aria-label={`${visible ? "Masquer" : "Afficher"} ${label.toLowerCase()}`}
+          title={visible ? "Masquer" : "Afficher"}
+          onClick={() => setVisible(!visible)}
+          className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <HugeiconsIcon
+            icon={visible ? ViewOffIcon : ViewIcon}
+            strokeWidth={1.75}
+            className="size-4"
+          />
+        </button>
+      }
+    />
   );
 }

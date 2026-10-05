@@ -1,8 +1,8 @@
-import { PageHeader } from "@/shared/components/feedback";
 import {
   OrganizationSettings,
   useActiveOrganization,
 } from "@/features/organizations";
+import { PageHeader } from "@/shared/components/feedback";
 export default function OrganizationSettingsPage() {
   const active = useActiveOrganization();
   return (

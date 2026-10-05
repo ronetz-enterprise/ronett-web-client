@@ -17,3 +17,21 @@ export async function openAuthenticated(page: Page, destination: string) {
   await loginOnCurrentPage(page);
   await expect(page).toHaveURL(destination);
 }
+
+/**
+ * Declencheur du menu de pied de barre laterale (compte). Son nom accessible
+ * reprend le nom de l'utilisateur, suivi d'un suffixe stable.
+ */
+export function accountMenu(page: Page) {
+  return page.getByRole("button", { name: /compte utilisateur$/ });
+}
+
+/** Selecteur d'organisation en tete de barre laterale. */
+export function organizationMenu(page: Page) {
+  return page.getByRole("button", { name: /changer d'organisation$/ });
+}
+
+export async function switchOrganization(page: Page, name: string) {
+  await organizationMenu(page).click();
+  await page.getByRole("menuitemradio", { name, exact: true }).click();
+}

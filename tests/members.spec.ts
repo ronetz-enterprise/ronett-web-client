@@ -1,6 +1,10 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { openAuthenticated, loginOnCurrentPage } from "./auth-helper";
+import {
+  openAuthenticated,
+  loginOnCurrentPage,
+  switchOrganization,
+} from "./auth-helper";
 const org = "/app/00000000-0000-4000-8000-000000000001";
 const other = "00000000-0000-4000-8000-000000000077";
 test("OWNER reads settings and reloads the validated context", async ({
@@ -106,11 +110,13 @@ test("switching organizations reloads isolated memberships and status filters", 
   await expect(
     page.getByRole("row", { name: new RegExp(other) }),
   ).toContainText("Suspendu");
-  await page.getByRole("combobox", { name: "Organisation active" }).click();
+  // Les paramètres ont leur propre barre latérale : retour à l'espace pour changer d'organisation.
   await page
-    .getByRole("option", { name: "Organisation B", exact: true })
+    .getByRole("link", { name: "Retour à l’espace", exact: true })
     .click();
+  await switchOrganization(page, "Organisation B");
   await expect(page).toHaveURL("/app/00000000-0000-4000-8000-000000000002");
+  await page.getByRole("link", { name: "Paramètres", exact: true }).click();
   await page.getByRole("link", { name: "Membres", exact: true }).click();
   await expect(
     page.getByRole("row", { name: new RegExp(other) }),
@@ -122,11 +128,12 @@ test("switching organizations reloads isolated memberships and status filters", 
   await page.getByRole("option", { name: "Suspendu", exact: true }).click();
   await expect(page.getByText("Aucun résultat", { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/status=SUSPENDED/);
-  await page.getByRole("combobox", { name: "Organisation active" }).click();
   await page
-    .getByRole("option", { name: "Organisation A", exact: true })
+    .getByRole("link", { name: "Retour à l’espace", exact: true })
     .click();
+  await switchOrganization(page, "Organisation A");
   await expect(page).toHaveURL(org);
+  await page.getByRole("link", { name: "Paramètres", exact: true }).click();
   await page.getByRole("link", { name: "Membres", exact: true }).click();
   await expect(
     page.getByRole("row", { name: new RegExp(other) }),

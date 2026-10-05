@@ -5,17 +5,15 @@ const valid = {
   lastName: "Fixture",
   email: "test@example.test",
   password: "Fixture-pass-123",
-  confirmation: "Fixture-pass-123",
 };
-it("validates only the registration DTO plus local password confirmation", () => {
+it("validates only the registration DTO", () => {
   expect(registerSchema.safeParse(valid).success).toBe(true);
   for (const patch of [
     { firstName: " " },
     { lastName: "x".repeat(101) },
     { email: "invalid" },
     { password: "short" },
-    { confirmation: "different" },
-    { password: "é".repeat(37), confirmation: "é".repeat(37) },
+    { password: "é".repeat(37) },
   ])
     expect(registerSchema.safeParse({ ...valid, ...patch }).success).toBe(
       false,
@@ -24,7 +22,6 @@ it("validates only the registration DTO plus local password confirmation", () =>
     registerSchema.safeParse({
       ...valid,
       password: "é".repeat(36),
-      confirmation: "é".repeat(36),
     }).success,
   ).toBe(true);
 });

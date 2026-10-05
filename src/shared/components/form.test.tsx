@@ -4,12 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ApiError } from "@/shared/errors/api-error";
-import {
-  applyApiFieldErrors,
-  FormField,
-  ValidatedForm,
-  zodResolver,
-} from "./form";
+import { FormField, ValidatedForm } from "./form";
+import { applyApiFieldErrors, zodResolver } from "./form-utils";
 const schema = z.object({ label: z.string().min(1, "Libellé requis.") });
 function Form({ submit }: { submit: () => Promise<void> }) {
   const form = useForm({

@@ -4,11 +4,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { httpClient } from "@/shared/api/http-client";
 import { TechnicalError } from "@/shared/components/feedback";
-import {
-  FormField,
-  ValidatedForm,
-  zodResolver,
-} from "@/shared/components/form";
+import { FormField, ValidatedForm } from "@/shared/components/form";
+import { zodResolver } from "@/shared/components/form-utils";
 import { Button } from "@/shared/ui/button";
 import { ConfirmDialog } from "@/shared/components/confirm-dialog";
 const schema = z.object({ label: z.string().min(1, "Saisissez un libellé.") });
