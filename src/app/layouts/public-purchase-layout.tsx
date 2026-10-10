@@ -22,9 +22,22 @@ export default function PublicPurchaseLayout() {
         >
           Aller aux offres
         </a>
-        <header className="border-b px-4 py-5">
-          <div className="mx-auto max-w-3xl font-heading text-lg font-semibold">
-            Ronetz
+        <header className="border-b px-4 py-4">
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span
+                aria-hidden="true"
+                className="flex size-8 items-center justify-center rounded-lg bg-brand font-heading text-sm font-semibold text-brand-foreground"
+              >
+                R
+              </span>
+              <span className="font-heading text-base font-semibold tracking-tight">
+                Ronetz WiFi
+              </span>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              Paiement Mobile Money
+            </span>
           </div>
         </header>
         <main
@@ -36,7 +49,8 @@ export default function PublicPurchaseLayout() {
           </ContentBoundary>
         </main>
         <footer className="border-t px-4 py-5 text-center text-xs text-muted-foreground">
-          Consultez les offres depuis le lien fourni sur votre portail Wi-Fi.
+          Un souci de paiement ou de connexion ? Adressez-vous au responsable du
+          point WiFi.
         </footer>
       </div>
     </QueryClientProvider>
