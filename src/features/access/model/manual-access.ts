@@ -135,8 +135,12 @@ export function manualAccessBody(values: ManualAccessValues) {
  *
  * `credentialDelivery` n'est renseigné que **à la création** : un rejeu de la
  * même clé d'idempotence renvoie `created=false` et `credentialDelivery=null`,
- * le mot de passe n'étant jamais rejoué. La réponse contient aussi un jeton de
- * récupération qui n'est ni lu, ni affiché, ni conservé.
+ * le mot de passe n'étant jamais rejoué.
+ *
+ * Sur un site servi par un nœud, le mot de passe n'existe sur le réseau qu'après
+ * confirmation du nœud : la création renvoie alors `credentialDelivery=null` et un
+ * `retrievalToken` à usage borné (15 min, 5 remises). Il n'est jamais affiché ni
+ * conservé hors de l'état du composant qui attend la remise.
  */
 export const issuedCredentialSchema = z.object({
   credentialId: z.uuid(),
@@ -149,5 +153,10 @@ export type IssuedCredential = z.infer<typeof issuedCredentialSchema>;
 export const accessIssuanceResultSchema = z.object({
   created: z.boolean(),
   credentialDelivery: issuedCredentialSchema.nullable(),
+  retrievalToken: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{43}$/)
+    .nullish()
+    .transform((value) => value ?? null),
 });
 export type AccessIssuanceResult = z.infer<typeof accessIssuanceResultSchema>;

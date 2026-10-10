@@ -26,6 +26,12 @@ export const accessEndpoints = {
     `${accessEndpoints.detail(accessGrantId)}/revocation`,
   projectionRetries: (accessGrantId: string) =>
     `${accessEndpoints.detail(accessGrantId)}/projection-retries`,
+  /**
+   * Remise du mot de passe d'un accès préparé par le nœud du site. Le jeton de récupération va
+   * dans le corps (POST), jamais dans l'URL ; `503` tant que le réseau n'a pas confirmé l'accès.
+   */
+  credentialDelivery: (accessGrantId: string) =>
+    `/api/public/access-grants/${z.uuid().parse(accessGrantId)}/credential-delivery`,
 };
 
 /** Méthodes réelles des transitions métier. */
@@ -53,9 +59,10 @@ export type AccessTransition = keyof typeof accessTransitions;
 /**
  * Contrats vérifiés mais hors de ce sprint.
  *
- * `POST /api/public/access-grants/{id}/credential-delivery` existe mais n'est pas
- * déclaré ici : l'identifiant du droit n'est découvrable par aucun contrat
- * public et la preuve requise n'est jamais distribuée au client.
+ * `POST /api/public/access-grants/{id}/credential-delivery` sert au gérant juste
+ * après une création manuelle sur un site servi par un nœud (voir
+ * `credentialDelivery`), et à l'acheteur dans le parcours d'achat public
+ * (`features/purchase`), chacun avec le jeton reçu à la création.
  *
  * Le module `accounting` côté backend est financier (grand livre, soldes,
  * retraits) : il n'expose aucune session réseau, et son autorisation tenant est

@@ -1,5 +1,4 @@
-export {
-  PublicOffers,
-  PurchaseReview,
-  publicPurchaseRoutes,
-} from "./components/public-offers";
+export { PublicOffers } from "./components/public-offers";
+export { PurchaseReview } from "./components/purchase-review";
+export { PurchaseTracking } from "./components/purchase-tracking";
+export { publicPurchaseRoutes } from "./components/purchase-shared";

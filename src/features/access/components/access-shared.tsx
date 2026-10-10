@@ -13,6 +13,7 @@ import {
   BreadcrumbPage,
 } from "@/shared/ui/breadcrumb";
 import {
+  accessDisplayState,
   accessRoutes,
   isFailedProjection,
   type AccessGrant,
@@ -109,6 +110,25 @@ export function AccessFailure({
 
 export function AccessProvisioningAlert({ grant }: { grant: AccessGrant }) {
   if (!isFailedProjection(grant.projectionStatus)) return null;
+  // Le réseau applique lui-même l'expiration : rien à signaler au gérant.
+  if (grant.status === "EXPIRED") return null;
+  if (accessDisplayState(grant).tone === "warning")
+    return (
+      <Alert variant="destructive">
+        <HugeiconsIcon icon={AlertCircleIcon} strokeWidth={1.75} />
+        <AlertTitle>Le réseau du site n’est pas encore à jour</AlertTitle>
+        <AlertDescription>
+          <p>
+            Votre demande est enregistrée, mais le client peut encore se
+            connecter tant que le réseau n’est pas mis à jour.
+          </p>
+          <p>
+            Ronetz réessaie automatiquement. Depuis « Gestion de l’accès », vous
+            pouvez relancer la mise à jour ou annuler l’accès.
+          </p>
+        </AlertDescription>
+      </Alert>
+    );
   return (
     <Alert variant="destructive">
       <HugeiconsIcon icon={AlertCircleIcon} strokeWidth={1.75} />

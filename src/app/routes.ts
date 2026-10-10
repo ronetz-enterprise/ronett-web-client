@@ -11,6 +11,10 @@ export default [
       "connect/:siteId/offers/:offerId",
       "../pages/public-purchase/purchase-review-page.tsx",
     ),
+    route(
+      "connect/:siteId/purchases/:purchaseId",
+      "../pages/public-purchase/purchase-tracking-page.tsx",
+    ),
   ]),
   layout("layouts/public-layout.tsx", [
     index("../pages/public/home-page.tsx"),

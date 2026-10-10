@@ -40,9 +40,9 @@ export type ManualAccessOutcome = AccessIssuanceResult & {
  * `created=false` et **sans** mot de passe.
  *
  * La réponse est traitée comme sensible : elle n'alimente aucune query, aucun
- * store et aucun stockage persistant. Seul l'objet `credentialDelivery` est
- * conservé en état de composant pour l'affichage unique, et le jeton de
- * récupération présent dans la réponse n'est jamais lu.
+ * store et aucun stockage persistant. Seuls `credentialDelivery` ou, sur un site
+ * servi par un nœud, `retrievalToken` sont conservés en état de composant, le
+ * temps de l'affichage unique (voir `useRemoteCredentialDelivery`).
  */
 export function useManualAccess(active: Membership) {
   const { request } = useAuth();

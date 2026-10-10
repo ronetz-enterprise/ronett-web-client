@@ -23,7 +23,8 @@ export function accessPermissions(active: Membership, grant?: AccessGrant) {
   const owner = readable && active.role === "OWNER";
   const own = owner && grant?.organizationId === active.organizationId;
   const terminal = grant ? isTerminalGrant(grant) : false;
-  // Une projection en échec doit être relancée avant toute autre transition.
+  // Une projection en échec doit être relancée avant de suspendre ou reprendre. L'annulation
+  // reste possible : le backend l'accepte malgré l'échec, car elle ne fait que restreindre.
   const projectionBlocked = grant
     ? isFailedProjection(grant.projectionStatus)
     : false;
@@ -38,8 +39,8 @@ export function accessPermissions(active: Membership, grant?: AccessGrant) {
     // initiale fait partie de l'émission et n'est pas une reprise.
     canResumeAccess: own && grant.status === "SUSPENDED" && !projectionBlocked,
     // `AccessGrant.revoke` : valide depuis tout état non terminal, dont
-    // PENDING_PROVISIONING.
-    canRevokeAccess: own && !terminal && !projectionBlocked,
+    // PENDING_PROVISIONING, et même après un échec de mise à jour du réseau.
+    canRevokeAccess: own && !terminal,
     canRetryProvisioning: own && projectionBlocked && !terminal,
   };
 }
