@@ -1,17 +1,13 @@
 import type { AccessGrant } from "../model/access-grant";
 
 /**
- * Livraison publique du credential : protocole **absent**.
+ * Remise du mot de passe vue depuis l'espace gérant : **aucune** action possible.
  *
- * Le backend expose `POST /api/public/access-grants/{id}/credential-delivery`,
- * mais le parcours client ne peut pas l'atteindre : aucun contrat public ne
- * retourne l'identifiant du droit, la preuve exigée (jeton de délivrance dédié
- * ou `checkoutToken`) n'est distribuée à personne, et l'enveloppe chiffrée
- * n'est écrite qu'en mode de qualification `REMOTE_TEST` (profil `test`).
- *
- * Ce module ne contient volontairement aucune fonction de requête, aucun jeton,
- * aucun conteneur de secret et aucun repli de démonstration. Il ne décrit que ce
- * qui est vérifié, pour interdire toute implémentation simulée.
+ * L'acheteur récupère lui-même ses identifiants sur son téléphone, dans le parcours d'achat
+ * public (`features/purchase`) : `POST /api/public/access-grants/{id}/credential-delivery` avec le
+ * jeton d'achat gardé par son navigateur, 5 fois au plus pendant 15 minutes. Le gérant, lui, ne
+ * détient ni ce jeton ni une route pour renvoyer ou régénérer un mot de passe : cet objet le
+ * décrit, pour que l'espace gérant n'annonce aucune remise qu'il ne peut pas faire.
  */
 export const publicDeliveryContract = {
   status: "unavailable" as const,

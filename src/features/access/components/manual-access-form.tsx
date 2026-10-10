@@ -41,6 +41,7 @@ import { useManualAccess } from "../mutations/manual-access";
 import { AccessBreadcrumb, AccessFailure } from "./access-shared";
 import { AccessPolicyEnforcement } from "./access-policy-enforcement";
 import { IssuedCredentialPanel } from "./issued-credential-panel";
+import { RemoteCredentialPanel } from "./remote-credential-panel";
 
 type Form = UseFormReturn<ManualAccessValues>;
 type TextField =
@@ -176,6 +177,7 @@ export function ManualAccessForm({ active }: { active: Membership }) {
   const [issued, setIssued] = useState<{
     created: boolean;
     credential: IssuedCredential | null;
+    retrievalToken: string | null;
     grantId: string;
   } | null>(null);
   const form = useForm<ManualAccessValues>({
@@ -218,6 +220,11 @@ export function ManualAccessForm({ active }: { active: Membership }) {
     );
 
   if (issued) {
+    const acknowledge = () => {
+      setIssued(null);
+      mutation.rotate();
+      void navigate(accessRoutes.detail(active.organizationId, issued.grantId));
+    };
     return (
       <div className="space-y-6">
         {!dialog && (
@@ -234,13 +241,13 @@ export function ManualAccessForm({ active }: { active: Membership }) {
         {issued.credential ? (
           <IssuedCredentialPanel
             credential={issued.credential}
-            onAcknowledge={() => {
-              setIssued(null);
-              mutation.rotate();
-              void navigate(
-                accessRoutes.detail(active.organizationId, issued.grantId),
-              );
-            }}
+            onAcknowledge={acknowledge}
+          />
+        ) : issued.created && issued.retrievalToken ? (
+          <RemoteCredentialPanel
+            accessGrantId={issued.grantId}
+            retrievalToken={issued.retrievalToken}
+            onAcknowledge={acknowledge}
           />
         ) : (
           <div className="space-y-4">
@@ -316,6 +323,7 @@ export function ManualAccessForm({ active }: { active: Membership }) {
           setIssued({
             created: result.result.created,
             credential: result.result.credentialDelivery,
+            retrievalToken: result.result.retrievalToken,
             grantId: result.result.grant.accessGrantId,
           });
         }}

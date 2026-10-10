@@ -24,6 +24,7 @@ import {
   accessSourceLabels,
   accessSubjectLabels,
   isFailedProjection,
+  isTerminalGrant,
   preparationSteps,
   type AccessGrant,
 } from "../model/access-grant";
@@ -85,7 +86,9 @@ const stepStates = {
 function stateSentence(grant: AccessGrant) {
   const state = accessDisplayState(grant);
   if (state.usable) return "Le client peut se connecter avec cet accès.";
-  if (isFailedProjection(grant.projectionStatus))
+  if (state.tone === "warning")
+    return "Votre demande est enregistrée, mais le réseau du site n’est pas encore à jour : le client peut encore se connecter. Ronetz réessaie automatiquement ; vous pouvez aussi annuler l’accès.";
+  if (isFailedProjection(grant.projectionStatus) && !isTerminalGrant(grant))
     return "L’accès n’a pas encore pu être activé sur le réseau du site. Ronetz réessaie automatiquement.";
   if (state.tone === "pending")
     return "L’accès sera utilisable dès qu’il sera activé sur le réseau du site.";

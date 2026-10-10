@@ -112,8 +112,20 @@ export type AccessDisplayState = {
  * deux restent consultables séparément dans le détail.
  */
 export function accessDisplayState(grant: AccessGrant): AccessDisplayState {
-  if (isFailedProjection(grant.projectionStatus))
-    return { label: "Problème d’activation", tone: "danger", usable: false };
+  if (isFailedProjection(grant.projectionStatus)) {
+    // Échec à la création : l'accès n'existe pas encore sur le réseau.
+    if (grant.status === "ACTIVE" || grant.status === "PENDING_PROVISIONING")
+      return { label: "Problème d’activation", tone: "danger", usable: false };
+    // L'expiration est contrôlée par le réseau lui-même, même sans mise à jour.
+    if (grant.status === "EXPIRED")
+      return { label: "Expiré", tone: "neutral", usable: false };
+    // Restriction enregistrée mais pas encore appliquée : le client peut encore se connecter.
+    return {
+      label: `${accessGrantLabel(accessGrantStatusLabels, grant.status)} · réseau pas à jour`,
+      tone: "warning",
+      usable: false,
+    };
+  }
   if (grant.status === "ACTIVE")
     return isAppliedProjection(grant.projectionStatus)
       ? { label: "Actif", tone: "success", usable: true }

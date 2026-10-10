@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  accessIssuanceResultSchema,
   manualAccessBody,
   manualAccessDefaults,
   manualAccessSchema,
@@ -45,5 +46,28 @@ describe("création manuelle d'un accès", () => {
       subjectType: "DEVICE",
     });
     expect(result.success).toBe(false);
+  });
+  it("garde le jeton de récupération d'un accès préparé par le nœud du site", () => {
+    const token = "A".repeat(43);
+    expect(
+      accessIssuanceResultSchema.parse({
+        created: true,
+        credentialDelivery: null,
+        retrievalToken: token,
+      }).retrievalToken,
+    ).toBe(token);
+    expect(
+      accessIssuanceResultSchema.parse({
+        created: true,
+        credentialDelivery: null,
+      }).retrievalToken,
+    ).toBeNull();
+    expect(
+      accessIssuanceResultSchema.safeParse({
+        created: true,
+        credentialDelivery: null,
+        retrievalToken: "court",
+      }).success,
+    ).toBe(false);
   });
 });
