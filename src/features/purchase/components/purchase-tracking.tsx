@@ -18,16 +18,14 @@ import { Spinner } from "@/shared/ui/spinner";
 import { formatDateTime } from "@/shared/utils/format";
 import {
   useDeliveredCredential,
+  usePaymentChannels,
   usePurchaseProgress,
   usePurchaseSession,
   useRetryPayment,
   useVerifyPayment,
 } from "../hooks/use-purchase";
-import {
-  maskNumber,
-  operatorName,
-  type PaymentFormValues,
-} from "../model/mobile-money";
+import { maskNumber } from "../model/mobile-money";
+import { channelLabel } from "../model/payment-channel";
 import type { PurchaseStage } from "../model/purchase-progress";
 import { hotspotLogin, type PurchaseSession } from "../model/purchase-session";
 import { DeliveredCredentialCard } from "./delivered-credential";
@@ -83,6 +81,7 @@ function progressSteps(stage: PurchaseStage["kind"]): Step[] {
 
 function Receipt({ session }: { session: PurchaseSession }) {
   const offer = usePublicOffer(session.siteId, session.offerId);
+  const channels = usePaymentChannels();
   const rows: [string, string][] = [
     ["Offre", offer.data?.name ?? "…"],
     [
@@ -93,7 +92,7 @@ function Receipt({ session }: { session: PurchaseSession }) {
     ],
     [
       "Payé avec",
-      `${operatorName(session.network)} · ${maskNumber(session.phone)}`,
+      `${channelLabel(channels, session.channelId ?? session.network)} · ${maskNumber(session.phone)}`,
     ],
     ["Référence", session.purchaseId.slice(0, 8).toUpperCase()],
     ["Date", formatDateTime(session.createdAt)],
@@ -127,6 +126,7 @@ function Approval({
   stage: Extract<PurchaseStage, { kind: "approval" }>;
 }) {
   const elapsed = useElapsed(stage.payment.createdAt);
+  const channels = usePaymentChannels();
   const verify = useVerifyPayment(session);
   const [changing, setChanging] = useState(false);
   const retry = useRetryPayment(session);
@@ -158,8 +158,8 @@ function Approval({
           </h1>
           <p className="mx-auto max-w-sm text-sm text-muted-foreground">
             {redirect
-              ? `Ouvrez la page de validation de ${operatorName(session.network)} pour confirmer le paiement de ${amount}.`
-              : `Une demande de ${amount} a été envoyée au ${maskNumber(session.phone)} (${operatorName(session.network)}). Ouvrez-la et saisissez votre code secret pour confirmer.`}
+              ? `Ouvrez la page de validation de ${channelLabel(channels, session.channelId ?? session.network)} pour confirmer le paiement de ${amount}.`
+              : `Une demande de ${amount} a été envoyée au ${maskNumber(session.phone)} (${channelLabel(channels, session.channelId ?? session.network)}). Ouvrez-la et saisissez votre code secret pour confirmer.`}
           </p>
         </div>
         {redirect && (
@@ -250,7 +250,7 @@ function Approval({
             pending={retry.isPending}
             error={retry.isError ? purchaseErrorMessage(retry.error) : null}
             defaultValues={{
-              network: session.network as PaymentFormValues["network"],
+              channelId: session.channelId ?? session.network,
               phone: session.phone,
             }}
             onSubmit={(values) =>
@@ -289,7 +289,7 @@ function Retry({
           pending={retry.isPending}
           error={retry.isError ? purchaseErrorMessage(retry.error) : null}
           defaultValues={{
-            network: session.network as PaymentFormValues["network"],
+            channelId: session.channelId ?? session.network,
             phone: session.phone,
           }}
           onSubmit={(values) => retry.mutate(values)}

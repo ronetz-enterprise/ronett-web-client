@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   formatLocalNumber,
-  guessNetwork,
   isMobileNumber,
   maskNumber,
   paymentFormSchema,
@@ -13,6 +12,13 @@ import {
   pollInterval,
 } from "./purchase-progress";
 import { safeHotspotLogin } from "./purchase-session";
+import { initials } from "../components/purchase-header";
+import {
+  channelLabel,
+  fallbackPaymentChannels as channels,
+  findChannel,
+  guessChannel,
+} from "./payment-channel";
 import type { Payment, PurchaseAccessStatus } from "../api/purchase-api";
 
 const purchaseId = "3f6c1f5e-0f3a-4a1e-9c0f-2b7d1e4a9c10";
@@ -54,14 +60,23 @@ describe("numéro mobile money", () => {
     expect(isMobileNumber("222 11 22 33")).toBe(false);
     expect(isMobileNumber("67711")).toBe(false);
     expect(
-      paymentFormSchema.safeParse({ network: "MTN", phone: "2221", email: "" })
-        .success,
+      paymentFormSchema.safeParse({
+        channelId: "MOMO_CM_MTN",
+        phone: "2221",
+        email: "",
+      }).success,
     ).toBe(false);
   });
   it("présélectionne l'opérateur seulement pour les préfixes sûrs", () => {
-    expect(guessNetwork("677112233")).toBe("MTN");
-    expect(guessNetwork("699112233")).toBe("ORANGEMONEY");
-    expect(guessNetwork("620000000")).toBeNull();
+    expect(guessChannel(channels, "677112233")).toBe("MOMO_CM_MTN");
+    expect(guessChannel(channels, "699112233")).toBe("MOMO_CM_ORANGE");
+    expect(guessChannel(channels, "620000000")).toBeNull();
+  });
+  it("retrouve le canal d'un achat commencé avec un code opérateur", () => {
+    expect(findChannel(channels, "MTN")?.id).toBe("MOMO_CM_MTN");
+    expect(findChannel(channels, "MOMO_CM_ORANGE")?.label).toBe("Orange Money");
+    expect(channelLabel([], "ORANGEMONEY")).toBe("Orange Money");
+    expect(channelLabel([], "INCONNU")).toBe("Mobile Money");
   });
 });
 
@@ -149,5 +164,13 @@ describe("retour au portail du hotspot", () => {
     expect(safeHotspotLogin("https://evil.example/login")).toBeNull();
     expect(safeHotspotLogin("javascript:alert(1)")).toBeNull();
     expect(safeHotspotLogin("http://user:pw@10.0.0.1/")).toBeNull();
+  });
+});
+
+describe("initiales du lieu", () => {
+  it("ignore les petits mots", () => {
+    expect(initials("Café du Port")).toBe("CP");
+    expect(initials("Hôtel de l'Étoile")).toBe("HÉ");
+    expect(initials("Palmier")).toBe("PA");
   });
 });

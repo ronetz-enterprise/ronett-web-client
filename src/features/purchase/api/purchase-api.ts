@@ -1,10 +1,13 @@
 import { z } from "zod";
 import { httpClient } from "@/shared/api/http-client";
 import { ApiError } from "@/shared/errors/api-error";
+import { paymentChannelListSchema } from "../model/payment-channel";
 
 /**
  * Routes publiques de l'achat, appelées depuis l'appareil de l'acheteur, sans compte ni cookie.
  *
+ * - `GET /api/public/sites/{site}` donne le nom et la ville du lieu, pour l'en-tête.
+ * - `GET /api/public/payment-channels` liste les moyens de paiement proposés (opérateurs, logos).
  * - `POST /api/public/sites/{site}/checkout` crée l'achat et renvoie le jeton d'achat.
  * - `POST /api/payments` (en-tête `X-Checkout-Token`) lance le paiement mobile money ; le montant
  *   et la devise viennent de l'achat, jamais du navigateur.
@@ -108,11 +111,38 @@ export async function createCheckout(
   );
 }
 
+const publicSiteSchema = z.object({
+  id: uuid,
+  name: z.string(),
+  city: z.string().nullable(),
+});
+export type PublicSite = z.infer<typeof publicSiteSchema>;
+
+export async function publicSite(siteId: string, signal?: AbortSignal) {
+  return parse(
+    publicSiteSchema,
+    await httpClient(`/api/public/sites/${id(siteId)}`, {
+      credentials: "omit",
+      signal,
+    }),
+  );
+}
+
+export async function paymentChannels(signal?: AbortSignal) {
+  return parse(
+    paymentChannelListSchema,
+    await httpClient("/api/public/payment-channels", {
+      credentials: "omit",
+      signal,
+    }),
+  );
+}
+
 export async function initiatePayment(
   token: string,
   body: {
     purchaseId: string;
-    network: string;
+    channelId: string;
     phoneNumber: string;
     idempotencyKey: string;
   },
@@ -126,7 +156,6 @@ export async function initiatePayment(
       body: {
         ...body,
         purchaseId: id(body.purchaseId),
-        paymentMethod: "MOBILE_MONEY",
       },
     }),
   );
