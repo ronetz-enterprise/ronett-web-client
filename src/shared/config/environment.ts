@@ -2,16 +2,19 @@ import { z } from "zod";
 const environmentSchema = z
   .object({
     // Empty value = same origin (dev server proxies /api to the backend).
-    VITE_API_BASE_URL: z.union([z.literal(""), z.url().refine((value) => {
-      const url = new URL(value);
-      return (
-        ["http:", "https:"].includes(url.protocol) &&
-        !url.username &&
-        !url.password &&
-        !url.search &&
-        !url.hash
-      );
-    }, "Une URL HTTP(S) sans credentials, query ou fragment est requise.")]),
+    VITE_API_BASE_URL: z.union([
+      z.literal(""),
+      z.url().refine((value) => {
+        const url = new URL(value);
+        return (
+          ["http:", "https:"].includes(url.protocol) &&
+          !url.username &&
+          !url.password &&
+          !url.search &&
+          !url.hash
+        );
+      }, "Une URL HTTP(S) sans credentials, query ou fragment est requise."),
+    ]),
     VITE_APP_ENV: z.enum(["development", "test", "staging", "production"]),
     VITE_ENABLE_MOCKS: z
       .enum(["true", "false"])
