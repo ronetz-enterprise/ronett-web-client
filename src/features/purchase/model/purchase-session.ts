@@ -14,6 +14,9 @@ const sessionSchema = z.object({
   offerId: z.uuid(),
   token: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
   payableUntil: z.iso.datetime({ offset: true }),
+  /** Canal choisi ; absent pour un achat commencé avant les canaux. */
+  channelId: z.string().optional(),
+  /** Code opérateur (`MTN`…), gardé pour ces achats-là. */
   network: z.string(),
   phone: z.string(),
   paymentId: z.uuid().nullable(),
@@ -53,7 +56,9 @@ export function savePurchaseSession(session: PurchaseSession) {
 
 export function updatePurchaseSession(
   purchaseId: string,
-  patch: Partial<Pick<PurchaseSession, "paymentId" | "network" | "phone">>,
+  patch: Partial<
+    Pick<PurchaseSession, "paymentId" | "channelId" | "network" | "phone">
+  >,
 ) {
   const current = readPurchaseSession(purchaseId);
   if (current) savePurchaseSession({ ...current, ...patch });

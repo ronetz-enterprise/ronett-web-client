@@ -1,37 +1,10 @@
 import { z } from "zod";
 
 /**
- * Paiement mobile money côté client (Cameroun, XAF).
- *
- * Les opérateurs et l'indicatif sont ceux configurés côté serveur pour Flutterwave
- * (`networks` = `MTN`, `ORANGEMONEY` ; `country-code` = `237`) : une autre valeur serait
- * refusée avant tout appel au fournisseur.
+ * Numéro mobile money côté client (Cameroun, +237). Les opérateurs proposés viennent du serveur :
+ * voir `payment-channel.ts`.
  */
 export const COUNTRY_CODE = "237";
-
-export const mobileMoneyOperators = [
-  {
-    network: "MTN",
-    name: "MTN Mobile Money",
-    // Préfixes les plus répandus, pour présélectionner l'opérateur ; le client peut le changer.
-    prefixes: ["67", "650", "651", "652", "653", "654"],
-  },
-  {
-    network: "ORANGEMONEY",
-    name: "Orange Money",
-    prefixes: ["69", "655", "656", "657", "658", "659"],
-  },
-] as const;
-
-export type MobileMoneyNetwork =
-  (typeof mobileMoneyOperators)[number]["network"];
-
-export function operatorName(network: string) {
-  return (
-    mobileMoneyOperators.find((operator) => operator.network === network)
-      ?.name ?? "Mobile Money"
-  );
-}
 
 /** Garde les chiffres du numéro local, sans l'indicatif s'il a été saisi. */
 export function localDigits(value: string) {
@@ -71,16 +44,8 @@ export function maskNumber(value: string) {
   return `${digits[0]} •• •• •• ${digits.slice(-2)}`;
 }
 
-export function guessNetwork(value: string): MobileMoneyNetwork | null {
-  const digits = localDigits(value);
-  const match = mobileMoneyOperators.find((operator) =>
-    operator.prefixes.some((prefix) => digits.startsWith(prefix)),
-  );
-  return match?.network ?? null;
-}
-
 export const paymentFormSchema = z.object({
-  network: z.enum(["MTN", "ORANGEMONEY"], {
+  channelId: z.string({ error: "Choisissez votre opérateur." }).min(1, {
     error: "Choisissez votre opérateur.",
   }),
   phone: z

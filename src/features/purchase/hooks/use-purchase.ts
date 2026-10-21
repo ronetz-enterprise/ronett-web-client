@@ -7,12 +7,15 @@ import {
   createCheckout,
   initiatePayment,
   latestPayment,
+  paymentChannels,
+  publicSite,
   purchaseAccess,
   verifyPayment,
   type Payment,
   type PurchaseAccessStatus,
 } from "../api/purchase-api";
 import { toInternational, type PaymentFormValues } from "../model/mobile-money";
+import { fallbackPaymentChannels, findChannel } from "../model/payment-channel";
 import {
   createStageClock,
   pollInterval,
@@ -24,6 +27,38 @@ import {
   updatePurchaseSession,
   type PurchaseSession,
 } from "../model/purchase-session";
+
+/**
+ * Moyens de paiement proposés par l'application. Tant que la liste n'est pas arrivée, ou si elle ne
+ * peut pas l'être, la liste de secours est affichée : le serveur reste juge au paiement.
+ */
+export function usePaymentChannels() {
+  const query = useQuery({
+    queryKey: ["payment-channels"],
+    staleTime: 60_000,
+    retry: 1,
+    queryFn: ({ signal }) => paymentChannels(signal),
+  });
+  return query.data && query.data.length > 0
+    ? query.data
+    : fallbackPaymentChannels;
+}
+
+/** Nom et ville du lieu, pour l'en-tête du parcours ; rien si le lien ne correspond à aucun lieu. */
+export function usePublicSite(siteId: string | undefined) {
+  return useQuery({
+    queryKey: ["public-site", siteId],
+    enabled: !!siteId,
+    staleTime: 5 * 60_000,
+    retry: 1,
+    queryFn: ({ signal }) => publicSite(siteId!, signal),
+  });
+}
+
+/** Code opérateur gardé avec l'achat, pour l'affichage et les achats d'avant les canaux. */
+function networkOf(channelId: string) {
+  return findChannel(fallbackPaymentChannels, channelId)?.network ?? channelId;
+}
 
 /**
  * Lance un achat : crée l'achat (jeton gardé sur l'appareil), puis demande le paiement mobile
@@ -49,7 +84,8 @@ export function useStartPurchase(siteId: string, offerId: string) {
         offerId,
         token: checkout.checkoutToken,
         payableUntil: checkout.expiresAt,
-        network: values.network,
+        channelId: values.channelId,
+        network: networkOf(values.channelId),
         phone: values.phone,
         paymentId: null,
         createdAt: new Date().toISOString(),
@@ -58,7 +94,7 @@ export function useStartPurchase(siteId: string, offerId: string) {
       try {
         const payment = await initiatePayment(checkout.checkoutToken, {
           purchaseId: session.purchaseId,
-          network: values.network,
+          channelId: values.channelId,
           phoneNumber,
           idempotencyKey: crypto.randomUUID(),
         });
@@ -160,17 +196,18 @@ export function useRetryPayment(session: PurchaseSession) {
   return useMutation({
     retry: false,
     mutationFn: async (
-      values: Pick<PaymentFormValues, "network" | "phone">,
+      values: Pick<PaymentFormValues, "channelId" | "phone">,
     ) => {
       const payment = await initiatePayment(session.token, {
         purchaseId: session.purchaseId,
-        network: values.network,
+        channelId: values.channelId,
         phoneNumber: toInternational(values.phone),
         idempotencyKey: crypto.randomUUID(),
       });
       updatePurchaseSession(session.purchaseId, {
         paymentId: payment.id,
-        network: values.network,
+        channelId: values.channelId,
+        network: networkOf(values.channelId),
         phone: values.phone,
       });
       return payment;

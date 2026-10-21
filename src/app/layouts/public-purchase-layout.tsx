@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createQueryClient } from "@/shared/api/query-client";
-import { Outlet } from "react-router";
+import { Outlet, useParams } from "react-router";
+import { PurchaseHeader } from "@/features/purchase";
 import { ErrorBoundary as ContentBoundary } from "@/shared/components/error-boundary";
 export default function PublicPurchaseLayout() {
   // Session restoration/logout may clear the private cache; anonymous reading is independent.
   const [client] = useState(createQueryClient);
+  const { siteId } = useParams();
   useEffect(
     () => () => {
       void client.cancelQueries();
@@ -22,35 +24,24 @@ export default function PublicPurchaseLayout() {
         >
           Aller aux offres
         </a>
-        <header className="border-b px-4 py-4">
-          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <span
-                aria-hidden="true"
-                className="flex size-8 items-center justify-center rounded-lg bg-brand font-heading text-sm font-semibold text-brand-foreground"
-              >
-                R
-              </span>
-              <span className="font-heading text-base font-semibold tracking-tight">
-                Ronetz WiFi
-              </span>
-            </div>
-            <span className="text-xs text-muted-foreground">
-              Paiement Mobile Money
-            </span>
-          </div>
-        </header>
+        <PurchaseHeader siteId={siteId} />
         <main
           id="public-purchase-content"
-          className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:py-10"
+          className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:py-8"
         >
           <ContentBoundary>
             <Outlet />
           </ContentBoundary>
         </main>
-        <footer className="border-t px-4 py-5 text-center text-xs text-muted-foreground">
-          Un souci de paiement ou de connexion ? Adressez-vous au responsable du
-          point WiFi.
+        <footer className="space-y-1 px-4 py-6 text-center text-xs text-muted-foreground">
+          <p>
+            Un souci de paiement ou de connexion ? Adressez-vous au responsable
+            du point Wi-Fi.
+          </p>
+          <p>
+            Propulsé par{" "}
+            <span className="font-semibold text-foreground/80">Ronetz</span>
+          </p>
         </footer>
       </div>
     </QueryClientProvider>

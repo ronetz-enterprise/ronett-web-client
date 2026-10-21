@@ -110,6 +110,45 @@ const offer = (
   createdAt: ago(60 * 24 * 25),
   updatedAt: ago(60 * 24 * 2),
 });
+const channel = (
+  id: string,
+  network: string,
+  label: string,
+  logo: string,
+  prefixes: string[],
+) => ({
+  id,
+  methodType: "MOBILE_MONEY",
+  network,
+  label,
+  logoUrl: `/payment-logos/${logo}.svg`,
+  country: "CM",
+  dialCode: "237",
+  currency: "XAF",
+  phonePrefixes: prefixes,
+  minAmount: null,
+  maxAmount: null,
+  status: "ACTIVE",
+});
+export const fixturePaymentChannels = [
+  channel("MOMO_CM_MTN", "MTN", "MTN Mobile Money", "mtn-momo", [
+    "67",
+    "650",
+    "651",
+    "652",
+    "653",
+    "654",
+  ]),
+  channel("MOMO_CM_ORANGE", "ORANGEMONEY", "Orange Money", "orange-money", [
+    "69",
+    "655",
+    "656",
+    "657",
+    "658",
+    "659",
+  ]),
+];
+
 export const fixtureOffers = [
   offer(1, "Pass 1 heure", 200, 3600, 500_000_000),
   offer(2, "Pass journée", 500, 86_400, 2_000_000_000),
@@ -326,6 +365,26 @@ export const operationsHandlers = [
   http.get(`${api}/offers/:id`, ({ request, params }) => {
     if (!authorized(request, params)) return problem(401);
     const found = fixtureOffers.find((o) => o.offerId === params.id);
+    return found ? HttpResponse.json(found) : problem(404);
+  }),
+  http.get(`${api}/public/sites/:site`, ({ params }) => {
+    const site = fixtureSites.find(
+      (s) => s.id === params.site && s.status === "ACTIVE",
+    );
+    return site
+      ? HttpResponse.json({ id: site.id, name: site.name, city: site.city })
+      : problem(404);
+  }),
+  http.get(`${api}/public/payment-channels`, () =>
+    HttpResponse.json(fixturePaymentChannels),
+  ),
+  http.get(`${api}/public/sites/:site/offers/:id`, ({ params }) => {
+    const found = fixtureOffers.find(
+      (o) =>
+        o.siteId === params.site &&
+        o.offerId === params.id &&
+        o.status === "PUBLISHED",
+    );
     return found ? HttpResponse.json(found) : problem(404);
   }),
   http.get(`${api}/public/sites/:site/offers`, ({ request, params }) =>
